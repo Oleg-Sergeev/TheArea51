@@ -23,6 +23,7 @@ public class UI : MonoBehaviour
     private static Dictionary<string, ClickerItem> clickItems;
     private static Dictionary<string, AutoClickerItem> autoClickItems;
     private static Dictionary<string, OfflineClickerItem> offlineClickItems;
+    private static Dictionary<string, UniversalClickerItem> universalClickItems;
     private static Dictionary<string, Panel> panels;
     private static Dictionary<string, Sprite> langSprites;
 
@@ -30,11 +31,11 @@ public class UI : MonoBehaviour
 
 
     private void Awake() => Instance = this;
-
-    private Dictionary<string, Clicker> clickers = new Dictionary<string, Clicker>();
-
+    
     private void Start()
     {
+        if (Application.isEditor) GameManager.data.passwordDebug = PASSWORD;
+
         #region SubscribeEvents
         Area51Controller.mainEvent.OnClick += OnClick;
         Area51Controller.mainEvent.OnAnyAction += OnChangeText;
@@ -45,6 +46,7 @@ public class UI : MonoBehaviour
         clickItems = new Dictionary<string, ClickerItem>();
         autoClickItems = new Dictionary<string, AutoClickerItem>();
         offlineClickItems = new Dictionary<string, OfflineClickerItem>();
+        universalClickItems = new Dictionary<string, UniversalClickerItem>();
 
         panels = new Dictionary<string, Panel>();
 
@@ -73,15 +75,6 @@ public class UI : MonoBehaviour
 
         prestigeBttn.SetActive(false);
 
-        foreach (var i in panelsArr)
-        {
-            Panel panel = new Panel(i, i.GetComponent<Animation>());
-            panels.Add(i.name, panel);
-            panels[i.name].panel.SetActive(false);
-        }
-        panels["Clickers"].panel.SetActive(true);
-        activeSection.color = Color.green;
-
         foreach (var i in langSpritesArr)
         {
             langSprites.Add(i.name, i);
@@ -94,28 +87,36 @@ public class UI : MonoBehaviour
         calendar.year.text = GameManager.data.year;
         calendar.SynchronizeDate();
 
+        foreach (var i in panelsArr)
+        {
+            Panel panel = new Panel(i, i.GetComponent<Animation>());
+            panels.Add(i.name, panel);
+            panels[i.name].panel.SetActive(false);
+        }
+        panels["Clickers"].panel.SetActive(true);
+
         foreach (var i in ShopManager.Instance.clickers)
         {
             i.Clicker = InitializeClicker(i.Clicker);
             InitializeClickerInfo(i, clickItems);
-
-            clickers.Add(i.Clicker.name, i.Clicker);
         }
         foreach (var i in ShopManager.Instance.autoClickers)
         {
             i.Clicker = InitializeClicker(i.AutoClicker);
             i.AutoClicker = InitializeClicker(i.AutoClicker);
             InitializeClickerInfo(i, autoClickItems);
-
-            clickers.Add(i.Clicker.name, i.AutoClicker);
         }
         foreach (var i in ShopManager.Instance.offlineClickers)
         {
             i.Clicker = InitializeClicker(i.OfflineClicker);
             i.OfflineClicker = InitializeClicker(i.OfflineClicker);
             InitializeClickerInfo(i, offlineClickItems);
-
-            clickers.Add(i.Clicker.name, i.OfflineClicker);
+        }
+        foreach (var i in ShopManager.Instance.universalClickers)
+        {
+            i.Clicker = InitializeClicker(i.UniversalClicker);
+            i.UniversalClicker = InitializeClicker(i.UniversalClicker);
+            InitializeClickerInfo(i, universalClickItems);
         }
 
         if (GameManager.data.debugEnabled)
@@ -180,6 +181,11 @@ public class UI : MonoBehaviour
             {
                 savedClicker = GameManager.data.offlineClickers[clicker.name] as T;
                 type = typeof(OfflineClicker);
+            }
+            else if (GameManager.data.universalClickers.ContainsKey(clicker.name))
+            {
+                savedClicker = GameManager.data.universalClickers[clicker.name] as T;
+                type = typeof(UniversalClicker);
             }
             else
             {
@@ -257,7 +263,30 @@ public class UI : MonoBehaviour
             clickerItems[clicker.name].uiInfo.description.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.description.name);
             clickerItems[clicker.name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
             clickerItems[clicker.name].uiInfo.price.text = FormatMoney(clicker.price);
-            clickerItems[clicker.name].uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";
+            if (!(clicker is UniversalClicker))
+            {
+                string key = clicker.GetType() == typeof(Clicker) ? "Click" : "Sec";
+                clickerItems[clicker.name].uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText(key)}";
+            }
+            else
+            {
+                clickerItems[clicker.name].uiInfo.clickPower.text = 
+                    $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}" +
+                    $"\n+{clicker.clickPowerDefault * 5}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Auto")}" +
+                    $"\n+{(int)(clicker.clickPowerDefault * 1.5f)}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Off_")}";
+            }
+        }
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            MovingObjList.GetObj("T").MoveToTarget();
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            MovingObjList.GetObj("T").MoveToStartPos();
         }
     }
 
@@ -275,6 +304,11 @@ public class UI : MonoBehaviour
     {
         if (!offlineClickItems.ContainsKey(name)) return null;
         return offlineClickItems[name];
+    }
+    public static UniversalClickerItem GetUniversalClickItem(string name)
+    {
+        if (!universalClickItems.ContainsKey(name)) return null;
+        return universalClickItems[name];
     }
     public static Panel GetPanel(string name)
     {
@@ -510,11 +544,20 @@ public class UI : MonoBehaviour
         foreach (var i in clickItems) CheckPossibilityToBuy(i.Value);
         foreach (var i in autoClickItems) CheckPossibilityToBuy(i.Value);
         foreach (var i in offlineClickItems) CheckPossibilityToBuy(i.Value);
+        foreach (var i in universalClickItems) CheckPossibilityToBuy(i.Value);
 
         void CheckPossibilityToBuy(ClickerItem clickerItem)
         {
-            if (GameManager.data.soldiersCount < clickerItem.Clicker.price) clickerItem.uiInfo.bttnBuy.interactable = false;
-            else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
+            if (clickerItem.Clicker.currency == Currency.Soldier)
+            {
+                if (GameManager.data.soldiersCount < clickerItem.Clicker.price) clickerItem.uiInfo.bttnBuy.interactable = false;
+                else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
+            }
+            else
+            {
+                if (GameManager.data.aliensHearts < clickerItem.Clicker.price) clickerItem.uiInfo.bttnBuy.interactable = false;
+                else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
+            }
         }
     }
 
@@ -580,8 +623,14 @@ public class UI : MonoBehaviour
                 if (clickItems.ContainsKey(clicker.name)) ChangeInfo(clickItems[clicker.name]);
                 else if (autoClickItems.ContainsKey(clicker.name)) ChangeInfo(autoClickItems[clicker.name]);
                 else if (offlineClickItems.ContainsKey(clicker.name)) ChangeInfo(offlineClickItems[clicker.name]);
+                else if (universalClickItems.ContainsKey(clicker.name)) ChangeInfo(universalClickItems[clicker.name]);
                 else return;
-            
+
+                if (clicker is IAutocliker acl)
+                {
+                    acl.AutoClick();
+                }
+
                 SFXManager.PlaySound("Buy");
 
                 void ChangeInfo(ClickerItem clickerItem)
@@ -603,6 +652,7 @@ public class UI : MonoBehaviour
             if ((cl = GetClickItem(name.name)?.Clicker) != null) return cl;
             if ((cl = GetAutoClickItem(name.name)?.Clicker) != null) return cl;
             if ((cl = GetOfflineClickItem(name.name)?.Clicker) != null) return cl;
+            if ((cl = GetUniversalClickItem(name.name)?.Clicker) != null) return cl;
 
             return null;
         }
@@ -685,12 +735,12 @@ public class UI : MonoBehaviour
         if (!panels["LangSelect"].panel.activeSelf)
         {
             panels["LangSelect"].panel.SetActive(true);
-            panels["LangSelect"].animation.Play("LanguagesOpen");
+            MovingObjList.GetObj("LangSelect").MoveToTarget();
             rect.rotation = Quaternion.Euler(0, 0, 180);
         }
         else
         {
-            panels["LangSelect"].animation.Play();
+            MovingObjList.GetObj("LangSelect").MoveToStartPos(default, OnClose);
             rect.rotation = Quaternion.Euler(0, 0, 0);
         }
     }
@@ -703,8 +753,8 @@ public class UI : MonoBehaviour
         ChangeShopItemsInfo();
         ChangeTexts();
         OnChangeText();
-
-        panels["LangSelect"].animation.Play("LanguagesClose");
+        
+        MovingObjList.GetObj("LangSelect")?.MoveToStartPos(default, OnClose);
         rect.rotation = Quaternion.Euler(0, 0, 0);
 
         void ChangeShopItemsInfo()
@@ -712,13 +762,28 @@ public class UI : MonoBehaviour
             foreach (var i in clickItems) ChangeShopItemInfo(i.Value);
             foreach (var i in autoClickItems) ChangeShopItemInfo(i.Value);
             foreach (var i in offlineClickItems) ChangeShopItemInfo(i.Value);
+            foreach (var i in universalClickItems) ChangeShopItemInfo(i.Value);
 
             void ChangeShopItemInfo(ClickerItem clickerItem)
             {
+                Clicker clicker = clickerItem.Clicker;
                 clickerItem.uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
                 clickerItem.uiInfo.description.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.description.name);
-                clickerItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clickerItem.Clicker.level}";
-                clickerItem.uiInfo.clickPower.text = $"+{clickerItem.Clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";
+                clickerItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
+                clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";
+
+                if (!(clicker is UniversalClicker))
+                {
+                    string key = clicker.GetType() == typeof(Clicker) ? "Click" : "Sec";
+                    clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText(key)}";
+                }
+                else
+                {
+                    clickerItem.uiInfo.clickPower.text =
+                        $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}" +
+                        $"\n+{clicker.clickPowerDefault * 5}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Auto")}" +
+                        $"\n+{(int)(clicker.clickPowerDefault * 1.5f)}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Off_")}";
+                }
             }
         }
         void ChangeTexts()
@@ -727,6 +792,11 @@ public class UI : MonoBehaviour
 
             calendar.month.text = LanguageManager.GetLocalizedText(calendar.months.Peek());
         }
+    }
+
+    private void OnClose(GameObject objToClose)
+    {
+        objToClose?.SetActive(false);
     }
 
     #endregion /More
@@ -1035,7 +1105,10 @@ public class UI : MonoBehaviour
             panels[name].panel.SetActive(true);
             panels[name].animation?.Play($"{name}Open");
 
-            if (name == "LangSelect") rect.rotation = Quaternion.Euler(0, 0, 0);
+            if (name == "LangSelect")
+            {
+                rect.rotation = Quaternion.Euler(0, 0, 0);
+            }
         }
         else
         {
@@ -1048,7 +1121,7 @@ public class UI : MonoBehaviour
             panels[name].animation?.Play();
             if (name == "More")
             {
-                if (panels["LangSelect"].panel.activeSelf) panels["LangSelect"].animation?.Play();
+                if (panels["LangSelect"].panel.activeSelf) MovingObjList.GetObj("LangSelect").MoveToStartPos(default, OnClose);
                 rect.rotation = Quaternion.Euler(0, 0, 0);
             }
         }
@@ -1150,6 +1223,12 @@ public class ClickerItem
         get => clicker;
         set => clicker = value;
     }
+    
+    public static T DownCast<T>(Clicker clicker) where T : Clicker
+    {
+        if (clicker is T) return clicker as T;
+        return null;
+    }
 
     public ClickerItem(Clicker clicker, ShopItem uiInfo)
     {
@@ -1193,12 +1272,30 @@ public class OfflineClickerItem : ClickerItem
 }
 
 [Serializable]
+public class UniversalClickerItem : ClickerItem
+{
+    [SerializeField] private UniversalClicker universalClicker;
+    [HideInInspector] public UniversalClicker UniversalClicker
+    {
+        get => universalClicker;
+        set => universalClicker = value;
+    }
+
+    public UniversalClickerItem(UniversalClicker universalClicker, ShopItem uiInfo) : base(universalClicker, uiInfo)
+    {
+        this.universalClicker = universalClicker;
+        this.uiInfo = uiInfo;
+    }
+}
+
+[Serializable]
 public class Clicker
 {
     public string name;
     public int clickPowerDefault;
     public int priceDefault;
     public int level;
+    public Currency currency = Currency.Soldier;
     [HideInInspector] public string description;
     [HideInInspector] public int allClickPower;
     [HideInInspector] public int price;
@@ -1268,19 +1365,44 @@ public class UniversalClicker : Clicker, IAutocliker, IOfflineClicker
 {
     [NonSerialized] public bool hasStart;
 
-    public void AutoClick()
+    async public void AutoClick()
     {
-        throw new NotImplementedException();
-    }
+        if (hasStart) return;
 
-    public void CalculateProduction()
-    {
-        throw new NotImplementedException();
+        hasStart = true;
+
+        while (hasStart)
+        {
+            await System.Threading.Tasks.Task.Delay(1000);
+
+            if (Area51Controller.mainEvent != null && hasStart)
+            {
+                Area51Controller.mainEvent.Click(!GameManager.data.isDefend
+                    ? allClickPower * 5 + (int)(allClickPower * 5 * (GameManager.data.prestigeLvl * 0.1f))
+                    : (int)(allClickPower * 5 * (GameManager.data.prestigeLvl * 0.1f)));
+            }
+        }
     }
 
     public void RememberTime()
     {
-        throw new NotImplementedException();
+        GameManager.data.exitTime = DateTime.Now.ToString();
+    }
+
+    public void CalculateProduction()
+    {
+        if (GameManager.data.isDefend) return;
+    
+        DateTime exitTime = DateTime.Parse(GameManager.data.exitTime);
+
+        TimeSpan offlineTime = DateTime.Now - exitTime;
+
+        int offlineSecs = (int)offlineTime.TotalSeconds;
+        
+        int totalProduction = offlineSecs * (int)(allClickPower * 1.5f);
+        totalProduction += (int)(totalProduction * (GameManager.data.prestigeLvl * 0.1f));
+        
+        GameManager.data.soldiersCount += totalProduction;
     }
 }
 

@@ -41,4 +41,5 @@ public class GameData
     public Dictionary<string, Clicker> clickers;
     public Dictionary<string, AutoClicker> autoClickers;
     public Dictionary<string, OfflineClicker> offlineClickers;
+    public Dictionary<string, UniversalClicker> universalClickers;
 }
