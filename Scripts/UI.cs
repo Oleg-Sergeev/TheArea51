@@ -20,10 +20,8 @@ public class UI : MonoBehaviour
     public Text[] localizedTexts;
     public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, modifier, prestigeBttn, passwordInput;
     public GameObject[] panelsArr, tutorials;
-    private static Dictionary<string, ClickerItem> clickItems;
-    private static Dictionary<string, AutoClickerItem> autoClickItems;
-    private static Dictionary<string, OfflineClickerItem> offlineClickItems;
-    private static Dictionary<string, UniversalClickerItem> universalClickItems;
+    private static Dictionary<string, ClickerItem<Clicker>> clickItems;
+    private static Dictionary<string, BoosterItem<Booster>> boosters;
     private static Dictionary<string, Panel> panels;
     private static Dictionary<string, Sprite> langSprites;
 
@@ -43,11 +41,8 @@ public class UI : MonoBehaviour
         #endregion
 
         #region Init
-        clickItems = new Dictionary<string, ClickerItem>();
-        autoClickItems = new Dictionary<string, AutoClickerItem>();
-        offlineClickItems = new Dictionary<string, OfflineClickerItem>();
-        universalClickItems = new Dictionary<string, UniversalClickerItem>();
-
+        clickItems = new Dictionary<string, ClickerItem<Clicker>>();
+        boosters = new Dictionary<string, BoosterItem<Booster>>();
         panels = new Dictionary<string, Panel>();
 
         langSprites = new Dictionary<string, Sprite>();
@@ -70,7 +65,7 @@ public class UI : MonoBehaviour
         sliderModifier.maxValue = 5;
         textModifier.text = $"{sliderModifier.value}x";
         #endregion
-
+        
         modifier.SetActive(false);
 
         prestigeBttn.SetActive(false);
@@ -95,28 +90,25 @@ public class UI : MonoBehaviour
         }
         panels["Clickers"].panel.SetActive(true);
 
-        foreach (var i in ShopManager.Instance.clickers)
+        foreach (var i in ShopManager.Instance.manualClickers)
         {
             i.Clicker = InitializeClicker(i.Clicker);
-            InitializeClickerInfo(i, clickItems);
+            InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
         }
         foreach (var i in ShopManager.Instance.autoClickers)
         {
-            i.Clicker = InitializeClicker(i.AutoClicker);
-            i.AutoClicker = InitializeClicker(i.AutoClicker);
-            InitializeClickerInfo(i, autoClickItems);
+            i.Clicker = InitializeClicker(i.Clicker);
+            InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
         }
         foreach (var i in ShopManager.Instance.offlineClickers)
         {
-            i.Clicker = InitializeClicker(i.OfflineClicker);
-            i.OfflineClicker = InitializeClicker(i.OfflineClicker);
-            InitializeClickerInfo(i, offlineClickItems);
+            i.Clicker = InitializeClicker(i.Clicker);
+            InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
         }
         foreach (var i in ShopManager.Instance.universalClickers)
         {
-            i.Clicker = InitializeClicker(i.UniversalClicker);
-            i.UniversalClicker = InitializeClicker(i.UniversalClicker);
-            InitializeClickerInfo(i, universalClickItems);
+            i.Clicker = InitializeClicker(i.Clicker);
+            InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
         }
 
         if (GameManager.data.debugEnabled)
@@ -170,27 +162,12 @@ public class UI : MonoBehaviour
             if (GameManager.data.clickers.ContainsKey(clicker.name))
             {
                 savedClicker = GameManager.data.clickers[clicker.name] as T;
-                type = typeof(Clicker);
-            }
-            else if (GameManager.data.autoClickers.ContainsKey(clicker.name))
-            {
-                savedClicker = GameManager.data.autoClickers[clicker.name] as T;
-                type = typeof(AutoClicker);
-            }
-            else if (GameManager.data.offlineClickers.ContainsKey(clicker.name))
-            {
-                savedClicker = GameManager.data.offlineClickers[clicker.name] as T;
-                type = typeof(OfflineClicker);
-            }
-            else if (GameManager.data.universalClickers.ContainsKey(clicker.name))
-            {
-                savedClicker = GameManager.data.universalClickers[clicker.name] as T;
-                type = typeof(UniversalClicker);
+                type = typeof(T);
             }
             else
             {
                 savedClicker = clicker;
-                savedClicker.price = savedClicker.priceDefault;
+                savedClicker.currentPrice = savedClicker.priceDefault;
             }
 
             if (clicker.priceDefault != savedClicker.priceDefault)
@@ -202,9 +179,9 @@ public class UI : MonoBehaviour
                     price += (clicker.priceDefault / 2) + (clicker.priceDefault * level);
                     level++;
                 }
-                clicker.price = price;
-                MyDebug.LogWarning($"{clicker.name}'s price has changed: {savedClicker.price} -> {clicker.price}");
-                savedClicker.price = clicker.price;
+                clicker.currentPrice = price;
+                MyDebug.LogWarning($"{clicker.name}'s price has changed: {savedClicker.currentPrice} -> {clicker.currentPrice}");
+                savedClicker.currentPrice = clicker.currentPrice;
 
                 savedClicker.priceDefault = clicker.priceDefault;
             }
@@ -218,19 +195,19 @@ public class UI : MonoBehaviour
                 MyDebug.LogWarning($"{clicker.name}'s click power has changed: {savedClicker.allClickPower} -> {allClickPower}");
 
                 savedClicker.clickPowerDefault = clicker.clickPowerDefault;
-                if (type == typeof(Clicker))
+                if (type == typeof(ManualClicker) || type == typeof(UniversalClicker))
                 {
                     GameManager.data.clickBonus -= savedClicker.allClickPower;
                     savedClicker.allClickPower = allClickPower;
                     GameManager.data.clickBonus += savedClicker.allClickPower;
                 }
-                else if(type == typeof(AutoClicker))
+                else if(type == typeof(AutoClicker) || type == typeof(UniversalClicker))
                 {
                     GameManager.data.autoClickerBonus -= savedClicker.allClickPower;
                     savedClicker.allClickPower = allClickPower;
                     GameManager.data.autoClickerBonus += savedClicker.allClickPower;
                 }
-                else if (type == typeof(OfflineClicker))
+                else if (type == typeof(OfflineClicker) || type == typeof(UniversalClicker))
                 {
                     GameManager.data.offlineClickBonus -= savedClicker.allClickPower;
                     savedClicker.allClickPower = allClickPower;
@@ -241,7 +218,7 @@ public class UI : MonoBehaviour
             return savedClicker;
         }
 
-        void InitializeClickerInfo<T>(T clickerItem, Dictionary<string, T> clickerItems) where T : ClickerItem
+        void InitializeClickerInfo<T>(T clickerItem, Dictionary<string, T> clickerItems) where T : ClickerItem<Clicker>
         {
             var clicker = clickerItem.Clicker;
 
@@ -262,7 +239,7 @@ public class UI : MonoBehaviour
             clickerItems[clicker.name].uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
             clickerItems[clicker.name].uiInfo.description.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.description.name);
             clickerItems[clicker.name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
-            clickerItems[clicker.name].uiInfo.price.text = FormatMoney(clicker.price);
+            clickerItems[clicker.name].uiInfo.price.text = FormatMoney(clicker.currentPrice);
             if (!(clicker is UniversalClicker))
             {
                 string key = clicker.GetType() == typeof(Clicker) ? "Click" : "Sec";
@@ -290,25 +267,10 @@ public class UI : MonoBehaviour
         }
     }
 
-    public static ClickerItem GetClickItem(string name)
+    public static T GetClickerItem<T>(string name) where T : Clicker
     {
         if (!clickItems.ContainsKey(name)) return null;
-        return clickItems[name];
-    }
-    public static AutoClickerItem GetAutoClickItem(string name)
-    {
-        if (!autoClickItems.ContainsKey(name)) return null;
-        return autoClickItems[name];
-    }
-    public static OfflineClickerItem GetOfflineClickItem(string name)
-    {
-        if (!offlineClickItems.ContainsKey(name)) return null;
-        return offlineClickItems[name];
-    }
-    public static UniversalClickerItem GetUniversalClickItem(string name)
-    {
-        if (!universalClickItems.ContainsKey(name)) return null;
-        return universalClickItems[name];
+        return clickItems[name].Clicker as T;
     }
     public static Panel GetPanel(string name)
     {
@@ -463,14 +425,14 @@ public class UI : MonoBehaviour
     public void TutorialBuy()
     {
         string name = "ClickPower";
-        Clicker clicker = GetClickItem(name)?.Clicker;
+        ManualClicker clicker = GetClickerItem<ManualClicker>(name);
 
         Area51Controller.mainEvent.Buy(clicker, (bool success) =>
         {
             if (success)
             {
                 clickItems[name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
-                clickItems[name].uiInfo.price.text = clicker.price.ToString();
+                clickItems[name].uiInfo.price.text = clicker.currentPrice.ToString();
                 clickItems[name].uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";
 
                 tutorials[1].transform.GetChild(1).gameObject.SetActive(false);
@@ -483,7 +445,7 @@ public class UI : MonoBehaviour
 
                 SFXManager.PlaySound("Buy");
             }
-            else MyDebug.LogError($"Clicker {clicker.name} not bought");
+            else MyDebug.LogError($"Clicker {name} not bought");
 
             OnChangeText();
         });
@@ -542,20 +504,17 @@ public class UI : MonoBehaviour
         if (prestigeOfflineClickerBonus.gameObject.activeSelf) prestigeOfflineClickerBonus.text = $"+{FormatMoney((int)(GameManager.data.offlineClickBonus * (GameManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
 
         foreach (var i in clickItems) CheckPossibilityToBuy(i.Value);
-        foreach (var i in autoClickItems) CheckPossibilityToBuy(i.Value);
-        foreach (var i in offlineClickItems) CheckPossibilityToBuy(i.Value);
-        foreach (var i in universalClickItems) CheckPossibilityToBuy(i.Value);
 
-        void CheckPossibilityToBuy(ClickerItem clickerItem)
+        void CheckPossibilityToBuy(ClickerItem<Clicker> clickerItem)
         {
             if (clickerItem.Clicker.currency == Currency.Soldier)
             {
-                if (GameManager.data.soldiersCount < clickerItem.Clicker.price) clickerItem.uiInfo.bttnBuy.interactable = false;
+                if (GameManager.data.soldiersCount < clickerItem.Clicker.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
                 else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
             }
             else
             {
-                if (GameManager.data.aliensHearts < clickerItem.Clicker.price) clickerItem.uiInfo.bttnBuy.interactable = false;
+                if (GameManager.data.aliensHearts < clickerItem.Clicker.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
                 else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
             }
         }
@@ -621,9 +580,6 @@ public class UI : MonoBehaviour
             if (success)
             {
                 if (clickItems.ContainsKey(clicker.name)) ChangeInfo(clickItems[clicker.name]);
-                else if (autoClickItems.ContainsKey(clicker.name)) ChangeInfo(autoClickItems[clicker.name]);
-                else if (offlineClickItems.ContainsKey(clicker.name)) ChangeInfo(offlineClickItems[clicker.name]);
-                else if (universalClickItems.ContainsKey(clicker.name)) ChangeInfo(universalClickItems[clicker.name]);
                 else return;
 
                 if (clicker is IAutocliker acl)
@@ -633,10 +589,10 @@ public class UI : MonoBehaviour
 
                 SFXManager.PlaySound("Buy");
 
-                void ChangeInfo(ClickerItem clickerItem)
+                void ChangeInfo(ClickerItem<Clicker> clickerItem)
                 {
                     clickerItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
-                    clickerItem.uiInfo.price.text = FormatMoney(clicker.price);
+                    clickerItem.uiInfo.price.text = FormatMoney(clicker.currentPrice);
                     clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";          
                 }
             }
@@ -649,10 +605,7 @@ public class UI : MonoBehaviour
         {
             Clicker cl;
 
-            if ((cl = GetClickItem(name.name)?.Clicker) != null) return cl;
-            if ((cl = GetAutoClickItem(name.name)?.Clicker) != null) return cl;
-            if ((cl = GetOfflineClickItem(name.name)?.Clicker) != null) return cl;
-            if ((cl = GetUniversalClickItem(name.name)?.Clicker) != null) return cl;
+            if ((cl = GetClickerItem<Clicker>(name.name)) != null) return cl;
 
             return null;
         }
@@ -760,11 +713,8 @@ public class UI : MonoBehaviour
         void ChangeShopItemsInfo()
         {
             foreach (var i in clickItems) ChangeShopItemInfo(i.Value);
-            foreach (var i in autoClickItems) ChangeShopItemInfo(i.Value);
-            foreach (var i in offlineClickItems) ChangeShopItemInfo(i.Value);
-            foreach (var i in universalClickItems) ChangeShopItemInfo(i.Value);
 
-            void ChangeShopItemInfo(ClickerItem clickerItem)
+            void ChangeShopItemInfo(ClickerItem<Clicker> clickerItem)
             {
                 Clicker clicker = clickerItem.Clicker;
                 clickerItem.uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
@@ -840,7 +790,6 @@ public class UI : MonoBehaviour
 
     public void ApplyPrestige()
     {
-        // ???
         try
         {
             Time.timeScale = 1;
@@ -854,9 +803,10 @@ public class UI : MonoBehaviour
             bool debugEnabled = GameManager.data.debugEnabled;
             bool wasTutorial = GameManager.data.wasTutorial;
 
-            foreach (var acl in GameManager.data.autoClickers)
+            foreach (var acl in GameManager.data.clickers)
             {
-                acl.Value.hasStart = false;
+                if (acl.Value is AutoClicker ac) ac.hasStart = false; 
+                else if (acl.Value is UniversalClicker uc) uc.hasStart = false; 
             }
 
             GameManager.data = new GameData();
@@ -1019,15 +969,8 @@ public class UI : MonoBehaviour
         {
             Clicker clicker = clickItems[currentClicker].Clicker;
             clicker.priceDefault = int.Parse(newPrice.text);
-            clicker.price = clicker.priceDefault;
+            clicker.currentPrice = clicker.priceDefault;
             clicker.level = 0;
-        }
-        else if (autoClickItems.ContainsKey(currentClicker))
-        {
-            AutoClicker autoclicker = autoClickItems[currentClicker].AutoClicker;
-            autoclicker.priceDefault = int.Parse(newPrice.text);
-            autoclicker.price = autoclicker.priceDefault;
-            autoclicker.level = 0;
         }
         else
         {
@@ -1040,19 +983,12 @@ public class UI : MonoBehaviour
 
     private void UpdateText(string name)
     {
-        if (autoClickItems.ContainsKey(name))
+        if (clickItems.ContainsKey(name))
         {
-            debugCurrentPrice.text = autoClickItems[name].AutoClicker.price.ToString();
-
-            autoClickItems[name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {autoClickItems[name].AutoClicker.level}";
-            autoClickItems[name].uiInfo.price.text = autoClickItems[name].AutoClicker.price.ToString();
-        }
-        else if (clickItems.ContainsKey(name))
-        {
-            debugCurrentPrice.text = clickItems[name].Clicker.price.ToString();
+            debugCurrentPrice.text = clickItems[name].Clicker.currentPrice.ToString();
 
             clickItems[name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clickItems[name].Clicker.level}";
-            clickItems[name].uiInfo.price.text = clickItems[name].Clicker.price.ToString();
+            clickItems[name].uiInfo.price.text = clickItems[name].Clicker.currentPrice.ToString();
         }
         else
         {
@@ -1202,218 +1138,3 @@ public class UI : MonoBehaviour
     }
 }
 
-[Serializable]
-public class ShopItem
-{
-    public Transform uiObject;
-    public Sprite avatar;
-    [HideInInspector]
-    public Text name, description, level, price, clickPower;
-    [HideInInspector] public Button bttnBuy;
-    [HideInInspector] public Image image;
-}
-
-[Serializable]
-public class ClickerItem
-{
-    public ShopItem uiInfo;
-    [SerializeField] private Clicker clicker;
-    [HideInInspector] public Clicker Clicker
-    {
-        get => clicker;
-        set => clicker = value;
-    }
-    
-    public static T DownCast<T>(Clicker clicker) where T : Clicker
-    {
-        if (clicker is T) return clicker as T;
-        return null;
-    }
-
-    public ClickerItem(Clicker clicker, ShopItem uiInfo)
-    {
-        this.clicker = clicker;
-        this.uiInfo = uiInfo;
-    }
-}
-
-[Serializable]
-public class AutoClickerItem : ClickerItem
-{
-    [SerializeField] private AutoClicker autoClicker;
-    [HideInInspector] public AutoClicker AutoClicker
-    {
-        get => autoClicker;
-        set => autoClicker = value;
-    }
-    
-    public AutoClickerItem(AutoClicker autoClicker, ShopItem uiInfo) : base(autoClicker, uiInfo)
-    {
-        this.autoClicker = autoClicker;
-        this.uiInfo = uiInfo;
-    }
-}
-
-[Serializable]
-public class OfflineClickerItem : ClickerItem
-{
-    [SerializeField] private OfflineClicker offlineClicker;
-    [HideInInspector] public OfflineClicker OfflineClicker
-    {
-        get => offlineClicker;
-        set => offlineClicker = value;
-    }
-    
-    public OfflineClickerItem(OfflineClicker offlineClicker, ShopItem uiInfo) : base(offlineClicker, uiInfo)
-    {
-        this.offlineClicker = offlineClicker;
-        this.uiInfo = uiInfo;
-    }
-}
-
-[Serializable]
-public class UniversalClickerItem : ClickerItem
-{
-    [SerializeField] private UniversalClicker universalClicker;
-    [HideInInspector] public UniversalClicker UniversalClicker
-    {
-        get => universalClicker;
-        set => universalClicker = value;
-    }
-
-    public UniversalClickerItem(UniversalClicker universalClicker, ShopItem uiInfo) : base(universalClicker, uiInfo)
-    {
-        this.universalClicker = universalClicker;
-        this.uiInfo = uiInfo;
-    }
-}
-
-[Serializable]
-public class Clicker
-{
-    public string name;
-    public int clickPowerDefault;
-    public int priceDefault;
-    public int level;
-    public Currency currency = Currency.Soldier;
-    [HideInInspector] public string description;
-    [HideInInspector] public int allClickPower;
-    [HideInInspector] public int price;
-    [HideInInspector] public bool hasBought;
-}
-
-[Serializable]
-public class AutoClicker : Clicker, IAutocliker
-{
-    [NonSerialized]
-    public bool hasStart;
-
-    async public void AutoClick()
-    {
-        if (hasStart) return;
-
-        hasStart = true;
-
-        while (hasStart)
-        {
-            await System.Threading.Tasks.Task.Delay(1000);
-
-            if (Area51Controller.mainEvent != null && hasStart)
-            {
-                Area51Controller.mainEvent.Click(!GameManager.data.isDefend
-                    ? allClickPower + (int)(allClickPower * (GameManager.data.prestigeLvl * 0.1f))
-                    : (int)(allClickPower * (GameManager.data.prestigeLvl * 0.1f)));
-            }
-        }
-    }
-}
-
-[Serializable]
-public class OfflineClicker : Clicker, IOfflineClicker
-{
-    public void RememberTime()
-    {
-        GameManager.data.exitTime = DateTime.Now.ToString();
-    }
-
-    public void CalculateProduction()
-    {
-        if (GameManager.data.isDefend)
-        {
-            MyDebug.LogWarning("Во время битвы оффлайн кликеры не вырабатывают солдат");
-            return;
-        }
-        DateTime exitTime = DateTime.Parse(GameManager.data.exitTime);
-
-        TimeSpan offlineTime = DateTime.Now - exitTime;
-
-        int offlineSecs = (int)offlineTime.TotalSeconds;
-
-        MyDebug.Log($"exit - {exitTime} /// now - {DateTime.Now} /// offline time - {offlineTime} /// offline secs - {offlineSecs}");
-
-        int totalProduction = offlineSecs * allClickPower;
-        totalProduction += (int)(totalProduction * (GameManager.data.prestigeLvl * 0.1f));
-
-        MyDebug.Log($"{name} has produced - {totalProduction}");
-
-        GameManager.data.soldiersCount += totalProduction;
-    }
-}
-
-[Serializable]
-public class UniversalClicker : Clicker, IAutocliker, IOfflineClicker
-{
-    [NonSerialized] public bool hasStart;
-
-    async public void AutoClick()
-    {
-        if (hasStart) return;
-
-        hasStart = true;
-
-        while (hasStart)
-        {
-            await System.Threading.Tasks.Task.Delay(1000);
-
-            if (Area51Controller.mainEvent != null && hasStart)
-            {
-                Area51Controller.mainEvent.Click(!GameManager.data.isDefend
-                    ? allClickPower * 5 + (int)(allClickPower * 5 * (GameManager.data.prestigeLvl * 0.1f))
-                    : (int)(allClickPower * 5 * (GameManager.data.prestigeLvl * 0.1f)));
-            }
-        }
-    }
-
-    public void RememberTime()
-    {
-        GameManager.data.exitTime = DateTime.Now.ToString();
-    }
-
-    public void CalculateProduction()
-    {
-        if (GameManager.data.isDefend) return;
-    
-        DateTime exitTime = DateTime.Parse(GameManager.data.exitTime);
-
-        TimeSpan offlineTime = DateTime.Now - exitTime;
-
-        int offlineSecs = (int)offlineTime.TotalSeconds;
-        
-        int totalProduction = offlineSecs * (int)(allClickPower * 1.5f);
-        totalProduction += (int)(totalProduction * (GameManager.data.prestigeLvl * 0.1f));
-        
-        GameManager.data.soldiersCount += totalProduction;
-    }
-}
-
-interface IAutocliker
-{
-    void AutoClick();
-}
-
-interface IOfflineClicker
-{
-    void RememberTime();
-
-    void CalculateProduction();
-}

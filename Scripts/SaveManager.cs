@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using UnityEngine;
 
 public static class SaveManager
 {
@@ -9,15 +10,15 @@ public static class SaveManager
     {
         string path = "";
 #if UNITY_ANDROID && !UNITY_EDITOR
-    path = UnityEngine.Application.persistentDataPath + "/Save.zg";
+    path = Application.persistentDataPath + "/Save.zg";
 #endif
 #if UNITY_EDITOR
-        path = UnityEngine.Application.dataPath + "/Save.zg";
+        path = Application.dataPath + "/Save.zg";
 #endif
         if (!deleteGame)
         {
             BinaryFormatter formatter = new BinaryFormatter();
-
+            
             using (FileStream fileStream = new FileStream(path, FileMode.Create))
             {
                 formatter.Serialize(fileStream, data);
@@ -34,10 +35,10 @@ public static class SaveManager
     {
         string path = "";
 #if UNITY_ANDROID && !UNITY_EDITOR
-        path = UnityEngine.Application.persistentDataPath + "/Save.zg";
+        path = Application.persistentDataPath + "/Save.zg";
 #endif
 #if UNITY_EDITOR
-        path = UnityEngine.Application.dataPath + "/Save.zg";
+        path = Application.dataPath + "/Save.zg";
 #endif
         if (!File.Exists(path)) return null;
 

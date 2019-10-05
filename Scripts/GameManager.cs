@@ -15,15 +15,10 @@ public class GameManager : MonoBehaviour
 
         CheckForNull(data);
 
-        foreach (var acl in data.autoClickers)
+        foreach (var acl in data.clickers)
         {
-            acl.Value.AutoClick();
-
-            await System.Threading.Tasks.Task.Delay(Random.Range(400, 600));
-        }
-        foreach (var ucl in data.universalClickers)
-        {
-            ucl.Value.AutoClick();
+            IAutocliker autoClicker = acl.Value as IAutocliker;
+            autoClicker?.AutoClick();
 
             await System.Threading.Tasks.Task.Delay(Random.Range(400, 600));
         }
@@ -33,9 +28,6 @@ public class GameManager : MonoBehaviour
         void CheckForNull(GameData data)
         {
             if (data.clickers == null) data.clickers = new Dictionary<string, Clicker>();
-            if (data.autoClickers == null) data.autoClickers = new Dictionary<string, AutoClicker>();
-            if (data.offlineClickers == null) data.offlineClickers = new Dictionary<string, OfflineClicker>();
-            if (data.universalClickers == null) data.universalClickers = new Dictionary<string, UniversalClicker>();
             if (data.timeToWinLeft == null) data.timeToWinLeft = 90f;
             if (data.enemySpawnStep == null) data.enemySpawnStep = 0.2f;
         }
@@ -55,24 +47,18 @@ public class GameManager : MonoBehaviour
     {
         if (!focus)
         {
-            foreach (var ocl in data.offlineClickers)
+            foreach (var ocl in data.clickers)
             {
-                ocl.Value.RememberTime();
-            }
-            foreach (var ucl in data.universalClickers)
-            {
-                ucl.Value.RememberTime();
+                IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
+                offlineClicker?.RememberTime();
             }
         }
         else
         {
-            foreach (var ocl in data.offlineClickers)
+            foreach (var ocl in data.clickers)
             {
-                ocl.Value.CalculateProduction();
-            }
-            foreach (var ucl in data.universalClickers)
-            {
-                ucl.Value.CalculateProduction();
+                IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
+                offlineClicker?.CalculateProduction();
             }
         }
 

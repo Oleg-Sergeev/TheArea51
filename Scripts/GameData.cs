@@ -29,8 +29,6 @@ public class GameData
         hasLost = false;
         hasRevertPrestige = false;
         clickers = new Dictionary<string, Clicker>();
-        autoClickers = new Dictionary<string, AutoClicker>();
-        offlineClickers = new Dictionary<string, OfflineClicker>();
     }
 
     public float? enemySpawnStep, timeToWinLeft;
@@ -39,7 +37,5 @@ public class GameData
     public bool enableSFX, wasTutorial, wasAttack, isDefend, hasLost, hasRevertPrestige, debugEnabled;
 
     public Dictionary<string, Clicker> clickers;
-    public Dictionary<string, AutoClicker> autoClickers;
-    public Dictionary<string, OfflineClicker> offlineClickers;
-    public Dictionary<string, UniversalClicker> universalClickers;
+    public Dictionary<string, Booster> boosters;
 }
