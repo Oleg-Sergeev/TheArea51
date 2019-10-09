@@ -30,6 +30,7 @@ public class MovingObj : MonoBehaviour
     public Vector2 defaultTarget;
     public float defaultSpeed = 1;
     [HideInInspector] public Vector2 startPos;
+
     private bool isRunning;
 
 
@@ -59,13 +60,18 @@ public class MovingObj : MonoBehaviour
 
         Vector2 currentTarget = newTarget == default ? defaultTarget : newTarget;
         float currentSpeed = newSpeed == default ? defaultSpeed : newSpeed;
-
+        float speed = currentSpeed / 5;
         while ((Vector2)transform.localPosition != defaultTarget && isRunning)
         {
-            transform.localPosition = Vector2.Lerp(transform.localPosition, currentTarget, currentSpeed * Time.deltaTime);
+            transform.localPosition = Vector2.Lerp(transform.localPosition, currentTarget, speed * Time.unscaledDeltaTime);
 
             if (Mathf.Abs(((Vector2)transform.localPosition - currentTarget).x) <= Mathf.Abs(bias.x) && Mathf.Abs(((Vector2)transform.localPosition - currentTarget).y) <= Mathf.Abs(bias.y))
                 break;
+
+            if (speed < currentSpeed * 2)
+            {
+                speed += Time.unscaledDeltaTime * currentSpeed * 2;
+            }
 
             await Task.Yield();
         }

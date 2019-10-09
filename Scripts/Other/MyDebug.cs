@@ -11,12 +11,7 @@ public class MyDebug : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else
-        {
-            Destroy(this);
-            return;
-        }
+        Instance = this;
 
         Initialize();
     }
@@ -39,7 +34,7 @@ public class MyDebug : MonoBehaviour
     public static void Log(object message)
     {
         AddMessage(Color.white, message);
-        if (GameManager.data.debugEnabled)
+        if (GameDataManager.data.debugEnabled)
         {
             Debug.Log(message);
         }
@@ -47,7 +42,7 @@ public class MyDebug : MonoBehaviour
     public static void LogWarning(object message)
     {
         AddMessage(new Color(1, 0.8f, 0), message);
-        if (GameManager.data.debugEnabled)
+        if (GameDataManager.data.debugEnabled)
         {
             Debug.LogWarning(message);
         }
@@ -55,7 +50,7 @@ public class MyDebug : MonoBehaviour
     public static void LogError(object message)
     {
         AddMessage(Color.red, message);
-        if (GameManager.data.debugEnabled)
+        if (GameDataManager.data.debugEnabled)
         {
             Debug.LogError(message);
         }
@@ -63,12 +58,10 @@ public class MyDebug : MonoBehaviour
 
     private static void AddMessage(Color color, object message)
     {
-        if (messages == null || texts == null)
-        {
-            Initialize();
-            return;
-        }
+        if (messages == null) Initialize();
         messages.Enqueue(new Message(color, message));
+
+        if (texts == null) return;
 
         if (messages.Count > texts.Length) messages.Dequeue();
 

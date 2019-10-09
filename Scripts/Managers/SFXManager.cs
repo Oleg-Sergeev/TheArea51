@@ -33,6 +33,6 @@ public class SFXManager : MonoBehaviour
     {
         enabled = enable;
 
-        GameManager.data.enableSFX = enable;
+        GameDataManager.data.enableSFX = enable;
     }
 }

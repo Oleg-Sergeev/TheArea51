@@ -9,14 +9,14 @@ public class EnemySpawner
         if (isSpawning) return;
         isSpawning = true;
 
-        while (GameManager.data.timeToWinLeft >= 0 && GameManager.data.isDefend)
+        while (GameDataManager.data.timeToWinLeft >= 0 && GameDataManager.data.isDefend)
         {
             PoolManager.Instance.Spawn(PoolType.Circle);
             PoolManager.Instance.Spawn(PoolType.Rectangle);
 
-            GameManager.data.timeToWinLeft -= (int)GameManager.data.enemySpawnStep;
+            GameDataManager.data.timeToWinLeft -= (int)GameDataManager.data.enemySpawnStep;
 
-            await Task.Delay((int)GameManager.data.enemySpawnStep * 1000);
+            await Task.Delay((int)GameDataManager.data.enemySpawnStep * 1000);
         }
         isSpawning = false;
     }

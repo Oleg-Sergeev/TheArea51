@@ -18,7 +18,7 @@ public static class LanguageManager
             UI.Instance.debugLng.text += lng;
         }
 
-        GameManager.data.language = lng;
+        GameDataManager.data.language = lng;
 
         localizedText = new Dictionary<string, string>();
 
@@ -31,11 +31,7 @@ public static class LanguageManager
 
     public static string GetLocalizedText(string key)
     {
-        if (!localizedText.ContainsKey(key))
-        {
-            MyDebug.LogError($"Key {key} not found");
-            return null;
-        }
+        if (!localizedText.ContainsKey(key)) return null;
         return localizedText[key];
     }
 }

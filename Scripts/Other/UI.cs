@@ -18,32 +18,33 @@ public class UI : MonoBehaviour
         prestigeClickBonus, prestigeAutoclickerBonus, prestigeOfflineClickerBonus, prClicker, prAutoclicker, prOfflineClicker,
         textModifier, activePanel, activeSection, prestige, prestigeLvl, gameVersion, debugLng;
     public Text[] localizedTexts;
-    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, modifier, prestigeBttn, passwordInput;
+    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, modifier, prestigeBttn, passwordInput, speedUp;
     public GameObject[] panelsArr, tutorials;
     private static Dictionary<string, ClickerItem<Clicker>> clickItems;
-    private static Dictionary<string, BoosterItem<Booster>> boosters;
-    private static Dictionary<string, Panel> panels;
+    private static Dictionary<string, BoosterItem<Booster>> boosterItems;
+    private static Dictionary<string, GameObject> panels;
     private static Dictionary<string, Sprite> langSprites;
 
     float speed = 0, heightVP, calendarDay = 60;
 
 
     private void Awake() => Instance = this;
-    
+
     private void Start()
     {
-        if (Application.isEditor) GameManager.data.passwordDebug = PASSWORD;
+        if (Application.isEditor) GameDataManager.data.passwordDebug = PASSWORD;
 
         #region SubscribeEvents
-        Area51Controller.mainEvent.OnClick += OnClick;
-        Area51Controller.mainEvent.OnAnyAction += OnChangeText;
+        EventManager.eventManager.OnClick += OnClick;
+        EventManager.eventManager.OnAnyAction += OnChangeText;
+        EventManager.eventManager.OnBoosterUsed += OnBoosterUse;
         Application.lowMemory += OnLowMemory;
         #endregion
 
         #region Init
         clickItems = new Dictionary<string, ClickerItem<Clicker>>();
-        boosters = new Dictionary<string, BoosterItem<Booster>>();
-        panels = new Dictionary<string, Panel>();
+        boosterItems = new Dictionary<string, BoosterItem<Booster>>();
+        panels = new Dictionary<string, GameObject>();
 
         langSprites = new Dictionary<string, Sprite>();
 
@@ -56,7 +57,7 @@ public class UI : MonoBehaviour
         #region Set
         gameVersion.text = $"v{Application.version}";
 
-        prestigeLvl.text = GameManager.data.prestigeLvl.ToString();
+        prestigeLvl.text = GameDataManager.data.prestigeLvl.ToString();
 
         heightVP = -testVP.rect.height + 400;
 
@@ -65,7 +66,7 @@ public class UI : MonoBehaviour
         sliderModifier.maxValue = 5;
         textModifier.text = $"{sliderModifier.value}x";
         #endregion
-        
+
         modifier.SetActive(false);
 
         prestigeBttn.SetActive(false);
@@ -75,20 +76,19 @@ public class UI : MonoBehaviour
             langSprites.Add(i.name, i);
         }
 
-        ChangeLanguage(GameManager.data.language);
+        ChangeLanguage(GameDataManager.data.language);
 
-        calendar.number.text = GameManager.data.number;
-        calendar.month.text = LanguageManager.GetLocalizedText(GameManager.data.month);
-        calendar.year.text = GameManager.data.year;
+        calendar.number.text = GameDataManager.data.number;
+        calendar.month.text = LanguageManager.GetLocalizedText(GameDataManager.data.month);
+        calendar.year.text = GameDataManager.data.year;
         calendar.SynchronizeDate();
 
         foreach (var i in panelsArr)
         {
-            Panel panel = new Panel(i, i.GetComponent<Animation>());
-            panels.Add(i.name, panel);
-            panels[i.name].panel.SetActive(false);
+            panels.Add(i.name, i);
+            panels[i.name].SetActive(false);
         }
-        panels["Clickers"].panel.SetActive(true);
+        panels["Clickers"].SetActive(true);
 
         foreach (var i in ShopManager.Instance.manualClickers)
         {
@@ -110,36 +110,42 @@ public class UI : MonoBehaviour
             i.Clicker = InitializeClicker(i.Clicker);
             InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
         }
+        foreach (var i in ShopManager.Instance.timeBoosters)
+        {
+            i.Booster = InitializeBooster(i.Booster);
+            InitializeBoosterInfo(new BoosterItem<Booster>(i.uiInfo, i.Booster), boosterItems);
+            if (i.Booster.IsUsing) i.Booster.Use();
+        }
 
-        if (GameManager.data.debugEnabled)
+        if (GameDataManager.data.debugEnabled)
         {
             debugButtons.SetActive(true);
             debugLog.SetActive(true);
         }
 
-        if (!GameManager.data.wasTutorial) EnableIntro(true);
+        if (!GameDataManager.data.wasTutorial) EnableIntro(true);
         else
         {
             foreach (var i in tutorials) Destroy(i);
             InvokeRepeating("NextDay", calendarDay, calendarDay);
         }
 
-        if (GameManager.data.isDefend)
+        if (GameDataManager.data.isDefend)
         {
             NextDay();
-            GameManager.data.timeToWinLeft += 5;
+            GameDataManager.data.timeToWinLeft += 5;
         }
 
-        if (GameManager.data.wasAttack && !GameManager.data.hasLost && !GameManager.data.hasRevertPrestige)
+        if (GameDataManager.data.wasAttack && !GameDataManager.data.hasLost && !GameDataManager.data.hasRevertPrestige)
         {
-            panels["Prestige"].panel.SetActive(true);
+            panels["Prestige"].SetActive(true);
         }
-        else if (GameManager.data.wasAttack && !GameManager.data.hasLost && GameManager.data.hasRevertPrestige)
+        else if (GameDataManager.data.wasAttack && !GameDataManager.data.hasLost && GameDataManager.data.hasRevertPrestige)
         {
             prestigeBttn.SetActive(true);
         }
 
-        if (GameManager.data.prestigeLvl > 0)
+        if (GameDataManager.data.prestigeLvl > 0)
         {
             //prClicker.gameObject.SetActive(true);
             prAutoclicker.gameObject.SetActive(true);
@@ -150,18 +156,18 @@ public class UI : MonoBehaviour
         }
 
         SFX(true);
-        FPS(GameManager.data.fps);
+        FPS(GameDataManager.data.fps);
 
         OnChangeText();
-        
+
         T InitializeClicker<T>(T clicker) where T : Clicker
         {
             T savedClicker = null;
             Type type = null;
 
-            if (GameManager.data.clickers.ContainsKey(clicker.name))
+            if (GameDataManager.data.clickers.ContainsKey(clicker.name))
             {
-                savedClicker = GameManager.data.clickers[clicker.name] as T;
+                savedClicker = GameDataManager.data.clickers[clicker.name] as T;
                 type = typeof(T);
             }
             else
@@ -197,37 +203,62 @@ public class UI : MonoBehaviour
                 savedClicker.clickPowerDefault = clicker.clickPowerDefault;
                 if (type == typeof(ManualClicker) || type == typeof(UniversalClicker))
                 {
-                    GameManager.data.clickBonus -= savedClicker.allClickPower;
+                    GameDataManager.data.clickBonus -= savedClicker.allClickPower;
                     savedClicker.allClickPower = allClickPower;
-                    GameManager.data.clickBonus += savedClicker.allClickPower;
+                    GameDataManager.data.clickBonus += savedClicker.allClickPower;
                 }
-                else if(type == typeof(AutoClicker) || type == typeof(UniversalClicker))
+                else if (type == typeof(AutoClicker) || type == typeof(UniversalClicker))
                 {
-                    GameManager.data.autoClickerBonus -= savedClicker.allClickPower;
+                    GameDataManager.data.autoClickerBonus -= savedClicker.allClickPower;
                     savedClicker.allClickPower = allClickPower;
-                    GameManager.data.autoClickerBonus += savedClicker.allClickPower;
+                    GameDataManager.data.autoClickerBonus += savedClicker.allClickPower;
                 }
                 else if (type == typeof(OfflineClicker) || type == typeof(UniversalClicker))
                 {
-                    GameManager.data.offlineClickBonus -= savedClicker.allClickPower;
+                    GameDataManager.data.offlineClickBonus -= savedClicker.allClickPower;
                     savedClicker.allClickPower = allClickPower;
-                    GameManager.data.offlineClickBonus += savedClicker.allClickPower;
+                    GameDataManager.data.offlineClickBonus += savedClicker.allClickPower;
                 }
             }
-            
+            if (clicker.currency != savedClicker.currency)
+            {
+                savedClicker.currency = clicker.currency;
+            }
+
             return savedClicker;
+        }
+
+        T InitializeBooster<T>(T booster) where T : Booster
+        {
+            T savedBooster = null;
+
+            if (GameDataManager.data.boosters.ContainsKey(booster.name))
+            {
+                savedBooster = GameDataManager.data.boosters[booster.name] as T;
+            }
+            else
+            {
+                savedBooster = booster;
+                savedBooster.useTimeRemained = savedBooster.useTime;
+            }
+
+            if (booster.priceDefault != savedBooster.priceDefault) savedBooster.priceDefault = booster.priceDefault;
+            if (booster.currency != savedBooster.currency) savedBooster.currency = booster.currency;
+            if (booster.useTime != savedBooster.useTime)
+            {
+                savedBooster.useTime = booster.useTime;
+                savedBooster.useTimeRemained = booster.useTime;
+            }
+
+            return savedBooster;
         }
 
         void InitializeClickerInfo<T>(T clickerItem, Dictionary<string, T> clickerItems) where T : ClickerItem<Clicker>
         {
             var clicker = clickerItem.Clicker;
 
-            clickerItem.uiInfo.image = clickerItem.uiInfo.uiObject.GetChild(0).GetChild(0).GetComponent<Image>();
-            clickerItem.uiInfo.bttnBuy = clickerItem.uiInfo.uiObject.GetChild(1).GetComponent<Button>();
-            clickerItem.uiInfo.name = clickerItem.uiInfo.uiObject.GetChild(2).GetComponent<Text>();
-            clickerItem.uiInfo.description = clickerItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
+            InitializeShopInfo(clickerItem.uiInfo);
             clickerItem.uiInfo.level = clickerItem.uiInfo.uiObject.GetChild(4).GetComponent<Text>();
-            clickerItem.uiInfo.price = clickerItem.uiInfo.uiObject.GetChild(5).GetComponent<Text>();
             clickerItem.uiInfo.clickPower = clickerItem.uiInfo.uiObject.GetChild(6).GetComponent<Text>();
 
             clickerItems.Add(clicker.name, clickerItem);
@@ -235,11 +266,12 @@ public class UI : MonoBehaviour
             clickerItems[clicker.name].uiInfo.name.name = clicker.name;
             clickerItems[clicker.name].uiInfo.description.name = clicker.name + "D";
 
-            clickerItems[clicker.name].uiInfo.image.sprite = clickerItem.uiInfo.avatar;
+            clickerItems[clicker.name].uiInfo.avatarImage.sprite = clickerItem.uiInfo.avatar;
             clickerItems[clicker.name].uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
             clickerItems[clicker.name].uiInfo.description.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.description.name);
             clickerItems[clicker.name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
             clickerItems[clicker.name].uiInfo.price.text = FormatMoney(clicker.currentPrice);
+            clickerItems[clicker.name].uiInfo.currency.sprite = Resources.Load<Sprite>(clickerItems[clicker.name].Clicker.currency.ToString());
             if (!(clicker is UniversalClicker))
             {
                 string key = clicker.GetType() == typeof(Clicker) ? "Click" : "Sec";
@@ -247,32 +279,52 @@ public class UI : MonoBehaviour
             }
             else
             {
-                clickerItems[clicker.name].uiInfo.clickPower.text = 
+                clickerItems[clicker.name].uiInfo.clickPower.text =
                     $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}" +
                     $"\n+{clicker.clickPowerDefault * 5}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Auto")}" +
                     $"\n+{(int)(clicker.clickPowerDefault * 1.5f)}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Off_")}";
             }
         }
+
+        void InitializeBoosterInfo<T>(T boosterItem, Dictionary<string, T> boosterItems) where T : BoosterItem<Booster>
+        {
+            var booster = boosterItem.Booster;
+
+            InitializeShopInfo(boosterItem.uiInfo);
+            boosterItem.uiInfo.amount = boosterItem.uiInfo.uiObject.GetChild(4).GetComponent<Text>();
+            boosterItem.uiInfo.bttnUse = boosterItem.uiInfo.uiObject.GetChild(6).GetComponent<Button>();
+
+            boosterItems.Add(booster.name, boosterItem);
+
+            boosterItems[booster.name].uiInfo.name.name = booster.name;
+            boosterItems[booster.name].uiInfo.description.name = booster.name + "D";
+
+            boosterItems[booster.name].uiInfo.avatarImage.sprite = boosterItem.uiInfo.avatar;
+            boosterItems[booster.name].uiInfo.name.text = LanguageManager.GetLocalizedText(boosterItem.uiInfo.name.name);
+            boosterItems[booster.name].uiInfo.description.text = LanguageManager.GetLocalizedText(boosterItem.uiInfo.description.name);
+            boosterItems[booster.name].uiInfo.amount.text = $"{booster.amount}x";
+            boosterItems[booster.name].uiInfo.price.text = booster.priceDefault.ToString();
+            boosterItems[booster.name].uiInfo.currency.sprite = Resources.Load<Sprite>(boosterItems[booster.name].Booster.currency.ToString());
+        }
+
+        void InitializeShopInfo(ShopItem shopItem)
+        {
+            shopItem.avatarImage = shopItem.uiObject.GetChild(0).GetChild(0).GetComponent<Image>();
+            shopItem.bttnBuy = shopItem.uiObject.GetChild(1).GetComponent<Button>();
+            shopItem.name = shopItem.uiObject.GetChild(2).GetComponent<Text>();
+            shopItem.description = shopItem.uiObject.GetChild(3).GetComponent<Text>();
+            shopItem.price = shopItem.uiObject.GetChild(5).GetComponent<Text>();
+            shopItem.currency = shopItem.uiObject.GetChild(7).GetComponent<Image>();
+        }
     }
 
-    private void Update()
+    public static T GetProduct<T>(string name) where T : Product
     {
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            MovingObjList.GetObj("T").MoveToTarget();
-        }
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            MovingObjList.GetObj("T").MoveToStartPos();
-        }
+        if (clickItems.ContainsKey(name)) return clickItems[name].Clicker as T;
+        else if (boosterItems.ContainsKey(name)) return boosterItems[name].Booster as T;
+        else return null;
     }
-
-    public static T GetClickerItem<T>(string name) where T : Clicker
-    {
-        if (!clickItems.ContainsKey(name)) return null;
-        return clickItems[name].Clicker as T;
-    }
-    public static Panel GetPanel(string name)
+    public static GameObject GetPanel(string name)
     {
         if (!panels.ContainsKey(name)) return null;
         return panels[name];
@@ -280,23 +332,23 @@ public class UI : MonoBehaviour
 
     private void NextDay()
     {
-        if (!GameManager.data.wasAttack && calendar.number.text == "20" && calendar.month.text == LanguageManager.GetLocalizedText("Sept"))
+        if (!GameDataManager.data.wasAttack && calendar.number.text == "20" && calendar.month.text == LanguageManager.GetLocalizedText("Sept"))
         {
-            if (!GameManager.data.isDefend)
+            if (!GameDataManager.data.isDefend)
             {
                 beforeStorm.SetActive(true);
                 Time.timeScale = 0;
-                GameManager.data.isDefend = true;
+                GameDataManager.data.isDefend = true;
                 return;
             }
 
-            Area51Controller.mainEvent.OnHpHasChanged += OnHpHasChanged;
-            Area51Controller.mainEvent.OnEndAttack += OnEndAttack;
+            EventManager.eventManager.OnHpHasChanged += OnHpHasChanged;
+            EventManager.eventManager.OnEndAttack += OnEndAttack;
 
-            Area51Controller.BeginDefend();
+            GameDataManager.BeginDefend();
 
             area51Hp.gameObject.SetActive(true);
-            area51Hp.maxValue = GameManager.data.maxHp;
+            area51Hp.maxValue = GameDataManager.data.maxHp;
 
             OnHpHasChanged();
 
@@ -319,6 +371,11 @@ public class UI : MonoBehaviour
         NextDay();
     }
 
+    public void Click()
+    {
+        EventManager.eventManager.Click(GameDataManager.data.clickBonus);
+    }
+
     #region DebugModidier
     private void EnableModifier()
     {
@@ -329,7 +386,7 @@ public class UI : MonoBehaviour
     {
         while (modifier.activeSelf)
         {
-            if (GameManager.data.debugEnabled) textModifier.text = $"{string.Format("{0:0.00}", sliderModifier.value)}x  // скорость - {string.Format("{0:0.00}", speed)}";
+            if (GameDataManager.data.debugEnabled) textModifier.text = $"{string.Format("{0:0.00}", sliderModifier.value)}x  // скорость - {string.Format("{0:0.00}", speed)}";
 
             else textModifier.text = $"{string.Format("{0:0.00}", sliderModifier.value)}x";
 
@@ -403,11 +460,11 @@ public class UI : MonoBehaviour
         {
             await System.Threading.Tasks.Task.Delay(1500);
             intro.SetActive(true);
-            intro.GetComponent<Animation>().Play("IntroOpen");
+            MovingObjList.GetObj(intro.name).MoveToTarget();
         }
         else
         {
-            intro.GetComponent<Animation>().Play();
+            MovingObjList.GetObj(intro.name).MoveToStartPos(default, OnClose);
         }
     }
 
@@ -425,9 +482,9 @@ public class UI : MonoBehaviour
     public void TutorialBuy()
     {
         string name = "ClickPower";
-        ManualClicker clicker = GetClickerItem<ManualClicker>(name);
+        ManualClicker clicker = GetProduct<ManualClicker>(name);
 
-        Area51Controller.mainEvent.Buy(clicker, (bool success) =>
+        EventManager.eventManager.Buy(clicker, (bool success) =>
         {
             if (success)
             {
@@ -457,7 +514,7 @@ public class UI : MonoBehaviour
 
         GameObject.Find("BottomUI").transform.GetChild(0).GetComponent<Button>().interactable = true;
 
-        GameManager.data.wasTutorial = true;
+        GameDataManager.data.wasTutorial = true;
 
         InvokeRepeating("NextDay", calendarDay, calendarDay);
     }
@@ -465,75 +522,108 @@ public class UI : MonoBehaviour
     #endregion /Tutorial
 
     #region OnEvent
-
+    //???
     private void OnClick(int clickCount)
     {
-        if (GameManager.data.isDefend)
+        if (GameDataManager.data.isDefend)
         {
-            Area51Controller.mainEvent.ChangeHp(clickCount);
+            EventManager.eventManager.ChangeHp(clickCount);
             return;
         }
 
-        if (GameManager.data.soldiersCount + (int)(clickCount * sliderModifier.value) >= 0)
-            GameManager.data.soldiersCount += (int)(clickCount * sliderModifier.value * Time.timeScale);
+        if (GameDataManager.data.soldiersCount + (int)(clickCount * sliderModifier.value) >= 0)
+            GameDataManager.data.soldiersCount += (int)(clickCount * sliderModifier.value * Time.timeScale);
         else
-            GameManager.data.soldiersCount = 0;
+            GameDataManager.data.soldiersCount = 0;
 
-        if (GameManager.data.wasAttack && GameManager.data.hasLost && GameManager.data.soldiersCount >= 1000000)
+        if (GameDataManager.data.wasAttack && GameDataManager.data.hasLost && GameDataManager.data.soldiersCount >= 1000000)
         {
-            panels["Prestige"].panel.transform.GetChild(2).GetComponent<Button>().interactable = true;
-            GameManager.data.hasLost = false;
+            panels["Prestige"].transform.GetChild(2).GetComponent<Button>().interactable = true;
+            GameDataManager.data.hasLost = false;
             OpenPrestigePanel();
         }
     }
 
     private void OnChangeText()
     {
-        aliensHearts.text = FormatMoney(GameManager.data.aliensHearts);
+        aliensHearts.text = FormatMoney(GameDataManager.data.aliensHearts);
 
-        soldiers.text = FormatMoney(GameManager.data.soldiersCount);
+        soldiers.text = FormatMoney(GameDataManager.data.soldiersCount);
 
-        textClickBonus.text = $"+{FormatMoney(GameManager.data.clickBonus)}/{LanguageManager.GetLocalizedText("Click")}";
+        textClickBonus.text = $"+{FormatMoney(GameDataManager.data.clickBonus)}/{LanguageManager.GetLocalizedText("Click")}";
 
-        textAutoclickerBonus.text = $"+{FormatMoney(GameManager.data.autoClickerBonus)}/{LanguageManager.GetLocalizedText("Sec")}";
+        textAutoclickerBonus.text = $"+{FormatMoney(GameDataManager.data.autoClickerBonus)}/{LanguageManager.GetLocalizedText("Sec")}";
 
-        textOfflineClickerBonus.text = $"+{FormatMoney(GameManager.data.offlineClickBonus)}/{LanguageManager.GetLocalizedText("Sec")}";
+        textOfflineClickerBonus.text = $"+{FormatMoney(GameDataManager.data.offlineClickBonus)}/{LanguageManager.GetLocalizedText("Sec")}";
 
-        if (prestigeAutoclickerBonus.gameObject.activeSelf) prestigeAutoclickerBonus.text = $"+{FormatMoney((int)(GameManager.data.autoClickerBonus * (GameManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
+        if (prestigeAutoclickerBonus.gameObject.activeSelf) prestigeAutoclickerBonus.text = $"+{FormatMoney((int)(GameDataManager.data.autoClickerBonus * (GameDataManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
 
-        if (prestigeOfflineClickerBonus.gameObject.activeSelf) prestigeOfflineClickerBonus.text = $"+{FormatMoney((int)(GameManager.data.offlineClickBonus * (GameManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
+        if (prestigeOfflineClickerBonus.gameObject.activeSelf) prestigeOfflineClickerBonus.text = $"+{FormatMoney((int)(GameDataManager.data.offlineClickBonus * (GameDataManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
 
-        foreach (var i in clickItems) CheckPossibilityToBuy(i.Value);
-
-        void CheckPossibilityToBuy(ClickerItem<Clicker> clickerItem)
+        foreach (var i in clickItems) CheckPossibilityToBuy(i.Value.Clicker);
+        foreach (var i in boosterItems)
         {
-            if (clickerItem.Clicker.currency == Currency.Soldier)
+            CheckPossibilityToBuy(i.Value.Booster);
+            CheckPossibillityToUse(i.Value.Booster);
+        }
+
+        void CheckPossibilityToBuy(Product product)
+        {
+            if (product is Clicker)
             {
-                if (GameManager.data.soldiersCount < clickerItem.Clicker.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
-                else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
+                ClickerItem<Clicker> clickerItem = clickItems[product.name];
+
+                if (clickerItem.Clicker.currency == Currency.Soldier)
+                {
+                    if (GameDataManager.data.soldiersCount < clickerItem.Clicker.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
+                    else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
+                }
+                else
+                {
+                    if (GameDataManager.data.aliensHearts < clickerItem.Clicker.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
+                    else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
+                }
             }
-            else
+            else if (product is Booster)
             {
-                if (GameManager.data.aliensHearts < clickerItem.Clicker.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
-                else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
+                BoosterItem<Booster> boosterItem = boosterItems[product.name];
+
+                if (boosterItem.Booster.currency == Currency.Soldier)
+                {
+                    if (GameDataManager.data.soldiersCount < boosterItem.Booster.priceDefault) boosterItem.uiInfo.bttnBuy.interactable = false;
+                    else if (!boosterItem.uiInfo.bttnBuy.interactable) boosterItem.uiInfo.bttnBuy.interactable = true;
+                }
+                else
+                {
+                    if (GameDataManager.data.aliensHearts < boosterItem.Booster.priceDefault) boosterItem.uiInfo.bttnBuy.interactable = false;
+                    else if (!boosterItem.uiInfo.bttnBuy.interactable) boosterItem.uiInfo.bttnBuy.interactable = true;
+                }
             }
+        }
+        
+        void CheckPossibillityToUse(Booster booster)
+        {
+            BoosterShopItem shopItem = boosterItems[booster.name].uiInfo;
+
+            if (booster.amount <= 0) shopItem.bttnUse.interactable = false;
+            else if (!shopItem.bttnUse.interactable && !booster.IsUsing) shopItem.bttnUse.interactable = true;
         }
     }
 
     private void OnHpHasChanged()
     {
-        if (GameManager.data.soldiersCount < 0) GameManager.data.soldiersCount = 0;
+        if (GameDataManager.data.soldiersCount < 0) GameDataManager.data.soldiersCount = 0;
 
-        area51HpImage.color = Color.HSVToRGB(area51Hp.value / (GameManager.data.maxHp * 3), 1, 1);
+        area51HpImage.color = Color.HSVToRGB(area51Hp.value / (GameDataManager.data.maxHp * 3), 1, 1);
 
-        area51Hp.value = GameManager.data.soldiersCount;
-        soldiers.text = FormatMoney(GameManager.data.soldiersCount);
+        area51Hp.value = GameDataManager.data.soldiersCount;
+        soldiers.text = FormatMoney(GameDataManager.data.soldiersCount);
     }
 
     private void OnEndAttack(bool isWin)
     {
-        GameManager.data.isDefend = false;
-        GameManager.data.wasAttack = true;
+        GameDataManager.data.isDefend = false;
+        GameDataManager.data.wasAttack = true;
 
         area51Hp.gameObject.SetActive(false);
 
@@ -543,18 +633,34 @@ public class UI : MonoBehaviour
         }
         else
         {
-            GameManager.data.hasLost = true;
-            panels["Prestige"].panel.transform.GetChild(2).GetComponent<Button>().interactable = false;
+            GameDataManager.data.hasLost = true;
+            panels["Prestige"].transform.GetChild(2).GetComponent<Button>().interactable = false;
             prestige.text = LanguageManager.GetLocalizedText("DefeatText");
         }
 
-        panels["Prestige"].panel.SetActive(true);
+        panels["Prestige"].SetActive(true);
 
         InvokeRepeating("NextDay", calendarDay, calendarDay);
 
         Time.timeScale = 0;
     }
-    
+
+    private void OnBoosterUse(string name, bool hasEnded)
+    {
+        if (!boosterItems.ContainsKey(name))
+        {
+            MyDebug.LogError($"Booster {name} not found");
+            return;
+        }
+
+        var boosterItem = boosterItems[name];
+
+        boosterItem.uiInfo.bttnUse.interactable = hasEnded && boosterItem.Booster.amount > 0;
+
+        speedUp.SetActive(!hasEnded);
+
+        boosterItem.uiInfo.amount.text = $"{boosterItem.Booster.amount}x";
+    }
     #endregion /OnEvent
 
     #region Shop
@@ -572,45 +678,48 @@ public class UI : MonoBehaviour
         description.GetChild(0).GetComponent<Text>().text = LanguageManager.GetLocalizedText(name.name + "D");
     }
 
-    public void BuyClicker(Text name)
+    public void BuyProduct(Text name)
     {
-        Clicker clicker = GetClicker();
-        Area51Controller.mainEvent.Buy(clicker, (bool success) =>
+        Product product = GetProduct<Product>(name.name);
+        EventManager.eventManager.Buy(product, (bool success) =>
         {
             if (success)
             {
-                if (clickItems.ContainsKey(clicker.name)) ChangeInfo(clickItems[clicker.name]);
-                else return;
+                ChangeInfo();
 
-                if (clicker is IAutocliker acl)
+                if (product is IAutocliker acl)
                 {
                     acl.AutoClick();
                 }
 
                 SFXManager.PlaySound("Buy");
 
-                void ChangeInfo(ClickerItem<Clicker> clickerItem)
+                void ChangeInfo()
                 {
-                    clickerItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
-                    clickerItem.uiInfo.price.text = FormatMoney(clicker.currentPrice);
-                    clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";          
+                    if (product is Clicker clicker)
+                    {
+                        ClickerItem<Clicker> clickerItem = clickItems[clicker.name];
+
+                        clickerItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
+                        clickerItem.uiInfo.price.text = FormatMoney(clicker.currentPrice);
+                        clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";
+                    }
+                    else if (product is Booster booster)
+                    {
+                        BoosterItem<Booster> boosterItem = boosterItems[booster.name];
+
+                        boosterItem.uiInfo.amount.text = booster.amount.ToString();
+                        boosterItem.uiInfo.price.text = FormatMoney(booster.priceDefault);
+                    }
+                    else MyDebug.LogWarning($"Product {name.name} not found");
                 }
             }
-            else MyDebug.LogError($"Clicker {clicker.name} not bought");
-        
+            else MyDebug.LogError($"Clicker {name.name} not bought");
+
             OnChangeText();
         });
-    
-        Clicker GetClicker()
-        {
-            Clicker cl;
-
-            if ((cl = GetClickerItem<Clicker>(name.name)) != null) return cl;
-
-            return null;
-        }
     }
-    
+
     public void Clickers(Text text)
     {
         OpenOrClosePanel(text.name, text);
@@ -624,6 +733,23 @@ public class UI : MonoBehaviour
         OpenOrClosePanel(text.name, text);
     }
 
+    #region BoosterAbilities
+
+    public void SpeedUpTime(Text name)
+    {
+        TimeBooster timeBooster = GetProduct<TimeBooster>(name.name);
+
+        if (timeBooster == null)
+        {
+            MyDebug.LogError($"time booster {name.name} not found");
+            return;
+        }
+
+        timeBooster.Use();
+    }
+
+    #endregion
+
     #endregion /Shop
 
     #region More
@@ -632,10 +758,10 @@ public class UI : MonoBehaviour
 
     public void SFX(bool isStart = false)
     {
-        if (isStart) SFXManager.EnableSound(GameManager.data.enableSFX);
-        else SFXManager.EnableSound(!GameManager.data.enableSFX);
+        if (isStart) SFXManager.EnableSound(GameDataManager.data.enableSFX);
+        else SFXManager.EnableSound(!GameDataManager.data.enableSFX);
 
-        if (GameManager.data.enableSFX)
+        if (GameDataManager.data.enableSFX)
         {
             buttonSFX.color = new Color(0, 0.75f, 0);
             toggleSFX.rectTransform.anchoredPosition = new Vector2(150, 0);
@@ -650,9 +776,9 @@ public class UI : MonoBehaviour
     public void FPS(int fps)
     {
         Application.targetFrameRate = fps;
-        GameManager.data.fps = fps;
+        GameDataManager.data.fps = fps;
 
-        switch (GameManager.data.fps)
+        switch (GameDataManager.data.fps)
         {
             case 30:
                 sliderFPS.rectTransform.anchoredPosition = new Vector2(-145, 0);
@@ -665,18 +791,18 @@ public class UI : MonoBehaviour
     }
     public void FPS()
     {
-        switch (GameManager.data.fps)
+        switch (GameDataManager.data.fps)
         {
             case 30:
                 Application.targetFrameRate = 60;
-                GameManager.data.fps = 60;
+                GameDataManager.data.fps = 60;
 
                 sliderFPS.rectTransform.anchoredPosition = new Vector2(0, 0);
                 break;
 
             case 60:
                 Application.targetFrameRate = 30;
-                GameManager.data.fps = 30;
+                GameDataManager.data.fps = 30;
 
                 sliderFPS.rectTransform.anchoredPosition = new Vector2(-145, 0);
                 break;
@@ -685,9 +811,9 @@ public class UI : MonoBehaviour
 
     public void Languages()
     {
-        if (!panels["LangSelect"].panel.activeSelf)
+        if (!panels["LangSelect"].activeSelf)
         {
-            panels["LangSelect"].panel.SetActive(true);
+            panels["LangSelect"].SetActive(true);
             MovingObjList.GetObj("LangSelect").MoveToTarget();
             rect.rotation = Quaternion.Euler(0, 0, 180);
         }
@@ -701,7 +827,7 @@ public class UI : MonoBehaviour
     {
         LanguageManager.ChangeLanguage(lang);
 
-        currentLanguage.sprite = langSprites[GameManager.data.language];
+        currentLanguage.sprite = langSprites[GameDataManager.data.language];
 
         ChangeShopItemsInfo();
         ChangeTexts();
@@ -760,18 +886,18 @@ public class UI : MonoBehaviour
 
         var t = GameObject.Find("ContentTest").GetComponent<RectTransform>();
 
-        if (panels[name].panel.activeSelf)
+        if (panels[name].activeSelf)
         {
-            panels["NotesList"].panel.SetActive(false);
-            panels[name].panel.SetActive(false);
+            panels["NotesList"].SetActive(false);
+            panels[name].SetActive(false);
             testVP.sizeDelta = new Vector2(0, 0);
         }
         else
         {
             if (activeNotesList != null) activeNotesList.SetActive(false);
-            activeNotesList = panels[name].panel;
-            panels["NotesList"].panel.SetActive(true);
-            panels[name].panel.SetActive(true);
+            activeNotesList = panels[name];
+            panels["NotesList"].SetActive(true);
+            panels[name].SetActive(true);
             testVP.sizeDelta = new Vector2(0, heightVP);
         }
         t.anchoredPosition = new Vector2(0, 350 * (numberInList - 1));
@@ -794,43 +920,43 @@ public class UI : MonoBehaviour
         {
             Time.timeScale = 1;
 
-            int aliensHearts = GameManager.data.aliensHearts;
-            int prestige = GameManager.data.prestigeLvl;
-            float? timeToWinLeft = GameManager.data.timeToWinLeft;
-            float? enemySpawnStep = GameManager.data.enemySpawnStep;
-            string password = GameManager.data.passwordDebug;
-            string language = GameManager.data.language;
-            bool debugEnabled = GameManager.data.debugEnabled;
-            bool wasTutorial = GameManager.data.wasTutorial;
+            int aliensHearts = GameDataManager.data.aliensHearts;
+            int prestige = GameDataManager.data.prestigeLvl;
+            float? timeToWinLeft = GameDataManager.data.timeToWinLeft;
+            float? enemySpawnStep = GameDataManager.data.enemySpawnStep;
+            string password = GameDataManager.data.passwordDebug;
+            string language = GameDataManager.data.language;
+            bool debugEnabled = GameDataManager.data.debugEnabled;
+            bool wasTutorial = GameDataManager.data.wasTutorial;
 
-            foreach (var acl in GameManager.data.clickers)
+            foreach (var acl in GameDataManager.data.clickers)
             {
                 if (acl.Value is AutoClicker ac) ac.hasStart = false; 
                 else if (acl.Value is UniversalClicker uc) uc.hasStart = false; 
             }
 
-            GameManager.data = new GameData();
+            GameDataManager.data = new GameData();
 
             prestige++;
             timeToWinLeft = 90 + (30 * prestige);
             if (enemySpawnStep >= 0.02f) enemySpawnStep *= 0.75f;
 
-            GameManager.data.aliensHearts = aliensHearts + (prestige * 1000);
-            GameManager.data.soldiersCount = 150000 * prestige + 51;
-            GameManager.data.prestigeLvl = prestige;
-            GameManager.data.timeToWinLeft = timeToWinLeft;
-            GameManager.data.enemySpawnStep = enemySpawnStep;
-            GameManager.data.passwordDebug = password;
-            GameManager.data.language = language;
-            GameManager.data.debugEnabled = debugEnabled;
-            GameManager.data.wasTutorial = wasTutorial;
+            GameDataManager.data.aliensHearts = aliensHearts + (prestige * 1000);
+            GameDataManager.data.soldiersCount = 150000 * prestige + 51;
+            GameDataManager.data.prestigeLvl = prestige;
+            GameDataManager.data.timeToWinLeft = timeToWinLeft;
+            GameDataManager.data.enemySpawnStep = enemySpawnStep;
+            GameDataManager.data.passwordDebug = password;
+            GameDataManager.data.language = language;
+            GameDataManager.data.debugEnabled = debugEnabled;
+            GameDataManager.data.wasTutorial = wasTutorial;
 
-            SaveManager.Save(GameManager.data);
+            SaveManager.Save(GameDataManager.data);
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
         catch (Exception e)
         {
-            panels["Prestige"].panel.SetActive(false);
+            panels["Prestige"].SetActive(false);
             MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
         }
     }
@@ -838,14 +964,14 @@ public class UI : MonoBehaviour
     public void RevertPrestige()
     {
         Time.timeScale = 1;
-        GameManager.data.hasRevertPrestige = true;
-        if (!GameManager.data.hasLost) prestigeBttn.SetActive(true);
-        panels["Prestige"].panel.SetActive(false);
+        GameDataManager.data.hasRevertPrestige = true;
+        if (!GameDataManager.data.hasLost) prestigeBttn.SetActive(true);
+        panels["Prestige"].SetActive(false);
     }
 
     public void OpenPrestigePanel()
     {
-        panels["Prestige"].panel.SetActive(true);
+        panels["Prestige"].SetActive(true);
         prestige.text = LanguageManager.GetLocalizedText("GetPrestige");
     }
 
@@ -855,15 +981,15 @@ public class UI : MonoBehaviour
 
     public void EnableDebug()
     {
-        if (string.IsNullOrEmpty(GameManager.data.passwordDebug))
+        if (string.IsNullOrEmpty(GameDataManager.data.passwordDebug))
         {
             passwordInput.SetActive(true);
             return;
         }
-        GameManager.data.debugEnabled = !GameManager.data.debugEnabled;
+        GameDataManager.data.debugEnabled = !GameDataManager.data.debugEnabled;
 
-        debugLog.SetActive(GameManager.data.debugEnabled);
-        debugButtons.SetActive(GameManager.data.debugEnabled);
+        debugLog.SetActive(GameDataManager.data.debugEnabled);
+        debugButtons.SetActive(GameDataManager.data.debugEnabled);
         //debugModifier.SetActive(MyDebug.debugEnabled);
     }
 
@@ -873,16 +999,16 @@ public class UI : MonoBehaviour
 
         if (password.text != PASSWORD) return;
 
-        GameManager.data.passwordDebug = PASSWORD;
+        GameDataManager.data.passwordDebug = PASSWORD;
         EnableDebug();
     }
 
     public void IncreaseSoldiers()
     {
-        if (GameManager.data.soldiersCount + 1000000000 > 0)
+        if (GameDataManager.data.soldiersCount + 1000000000 > 0)
         {
-            GameManager.data.soldiersCount += 1000000000;
-            GameManager.data.aliensHearts += 1000;
+            GameDataManager.data.soldiersCount += 1000000000;
+            GameDataManager.data.aliensHearts += 1000;
             OnChangeText();
         }
     }
@@ -1025,12 +1151,19 @@ public class UI : MonoBehaviour
 
     private void OpenOrClosePanel(string name, Text text)
     {
-        if (!panels[name].panel.activeSelf)
+        if (!panels[name].activeSelf)
         {
             if (activePanel != null)
             {
                 activePanel.color = Color.white;
-                panels[activePanel.name].animation.Play();
+
+                MovingObjList.GetObj(activePanel.name).MoveToStartPos(default, OnClose);
+
+                if (panels["LangSelect"].activeSelf)
+                {
+                    MovingObjList.GetObj("LangSelect").MoveToStartPos(default, OnClose);
+                    rect.rotation = Quaternion.Euler(0, 0, 0);
+                }
             }
             else activePanelPointer.color = Color.green;
 
@@ -1038,13 +1171,8 @@ public class UI : MonoBehaviour
             activePanel.color = Color.green;
             activePanelPointer.transform.position = activePanel.transform.position;
 
-            panels[name].panel.SetActive(true);
-            panels[name].animation?.Play($"{name}Open");
-
-            if (name == "LangSelect")
-            {
-                rect.rotation = Quaternion.Euler(0, 0, 0);
-            }
+            panels[name].SetActive(true);
+            MovingObjList.GetObj(name)?.MoveToTarget();
         }
         else
         {
@@ -1054,10 +1182,11 @@ public class UI : MonoBehaviour
             activePanel = null;
             activePanelPointer.color = Color.clear;
 
-            panels[name].animation?.Play();
-            if (name == "More")
+            MovingObjList.GetObj(name)?.MoveToStartPos(default, OnClose);
+
+            if (panels["LangSelect"].activeSelf)
             {
-                if (panels["LangSelect"].panel.activeSelf) MovingObjList.GetObj("LangSelect").MoveToStartPos(default, OnClose);
+                MovingObjList.GetObj("LangSelect").MoveToStartPos(default, OnClose);
                 rect.rotation = Quaternion.Euler(0, 0, 0);
             }
         }
@@ -1066,24 +1195,12 @@ public class UI : MonoBehaviour
     private void OpenOrCloseSection(string name, Text text)
     {
         activeSection.color = Color.white;
-        panels[activeSection.name].panel.SetActive(false);
+        panels[activeSection.name].SetActive(false);
 
         activeSection = text;
 
-        panels[name].panel.SetActive(true);
+        panels[name].SetActive(true);
         activeSection.color = Color.green;
-    }
-
-    public class Panel
-    {
-        public GameObject panel;
-        public Animation animation;
-
-        public Panel(GameObject panel, Animation animation)
-        {
-            this.panel = panel;
-            this.animation = animation;
-        }
     }
 
     [Serializable]
@@ -1097,20 +1214,20 @@ public class UI : MonoBehaviour
         {
             if ((calendar.number.text == "30" && calendar.months30Ending.Contains(calendar.months.Peek())) ||
                 (calendar.number.text == "31" && calendar.months31Ending.Contains(calendar.months.Peek())) ||
-                (calendar.number.text == (GameManager.data.leapCounter != 4 ? "28" : "29") && calendar.months.Peek() == "Feb"))
+                (calendar.number.text == (GameDataManager.data.leapCounter != 4 ? "28" : "29") && calendar.months.Peek() == "Feb"))
             {
                 calendar.NextMonth();
             }
             calendar.number.text = (int.Parse(calendar.number.text) + 1).ToString();
 
-            GameManager.data.number = calendar.number.text;
+            GameDataManager.data.number = calendar.number.text;
 
             return calendar;
         }
 
         public void SynchronizeDate()
         {
-            while (LanguageManager.GetLocalizedText(GameManager.data.month) != LanguageManager.GetLocalizedText(months.Peek()))
+            while (LanguageManager.GetLocalizedText(GameDataManager.data.month) != LanguageManager.GetLocalizedText(months.Peek()))
             {
                 var tempMonth = months.Dequeue();
                 months.Enqueue(tempMonth);
@@ -1127,13 +1244,13 @@ public class UI : MonoBehaviour
             if (currentMonth == "Dec")
             {
                 year.text = (int.Parse(year.text) + 1).ToString();
-                GameManager.data.year = year.text;
+                GameDataManager.data.year = year.text;
 
-                if (GameManager.data.leapCounter < 4) GameManager.data.leapCounter++;
-                else GameManager.data.leapCounter = 1;
+                if (GameDataManager.data.leapCounter < 4) GameDataManager.data.leapCounter++;
+                else GameDataManager.data.leapCounter = 1;
             }
 
-            GameManager.data.month = months.Peek();
+            GameDataManager.data.month = months.Peek();
         }
     }
 }
