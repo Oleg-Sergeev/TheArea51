@@ -16,6 +16,8 @@ public static class MovingObjList
 
     public static void AddObj(MovingObj obj)
     {
+        if (movingObjs == null) movingObjs = new Dictionary<string, MovingObj>();
+
         if (movingObjs.ContainsKey(obj.name))
         {
             MyDebug.LogWarning($"Object with key {obj.name} already exists in list");
@@ -23,12 +25,15 @@ public static class MovingObjList
         }
         movingObjs.Add(obj.name, obj);
     }
+
+    public static void Clear() => movingObjs.Clear();
 }
 
 public class MovingObj : MonoBehaviour
 {
-    public Vector2 defaultTarget;
+    public Vector2 defaultTarget, minimalDistance = new Vector2(1,1);
     public float defaultSpeed = 1;
+    public bool hideOnAwake = true;
     [HideInInspector] public Vector2 startPos;
 
     private bool isRunning;
@@ -38,6 +43,7 @@ public class MovingObj : MonoBehaviour
     {
         MovingObjList.AddObj(this);
         startPos = transform.localPosition;
+        gameObject.SetActive(!hideOnAwake);
     }
 
     public void MoveToTarget(Vector2 newTarget = default, float newSpeed = default, Action<GameObject> onEnd = default)
@@ -55,17 +61,16 @@ public class MovingObj : MonoBehaviour
         isRunning = false;
         await Task.Yield();
         isRunning = true;
-
-        Vector2 bias = new Vector2(1, 1);
-
+        
         Vector2 currentTarget = newTarget == default ? defaultTarget : newTarget;
         float currentSpeed = newSpeed == default ? defaultSpeed : newSpeed;
         float speed = currentSpeed / 5;
-        while ((Vector2)transform.localPosition != defaultTarget && isRunning)
+        while ((Vector2)transform.localPosition != currentTarget && isRunning)
         {
             transform.localPosition = Vector2.Lerp(transform.localPosition, currentTarget, speed * Time.unscaledDeltaTime);
 
-            if (Mathf.Abs(((Vector2)transform.localPosition - currentTarget).x) <= Mathf.Abs(bias.x) && Mathf.Abs(((Vector2)transform.localPosition - currentTarget).y) <= Mathf.Abs(bias.y))
+            if (Mathf.Abs(((Vector2)transform.localPosition - currentTarget).x) <= Mathf.Abs(minimalDistance.x)
+                && Mathf.Abs(((Vector2)transform.localPosition - currentTarget).y) <= Mathf.Abs(minimalDistance.y))
                 break;
 
             if (speed < currentSpeed * 2)

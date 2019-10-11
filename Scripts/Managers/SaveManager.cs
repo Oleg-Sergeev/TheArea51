@@ -35,7 +35,11 @@ public static class SaveManager
         }
         catch (System.Exception e)
         {
+            string logPath = Application.dataPath + "/Log.txt";
+            string lastLogs = "";
             MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
+            if (File.Exists(logPath)) lastLogs = File.ReadAllText(logPath);
+            File.WriteAllText(Application.dataPath + "/Log.txt", $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
         }
     }
 
@@ -63,7 +67,12 @@ public static class SaveManager
         }
         catch (System.Exception e)
         {
+            string logPath = Application.dataPath + "/Log.txt";
+            string lastLogs = "";
             MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
+            if (File.Exists(logPath)) lastLogs = File.ReadAllText(logPath);
+            File.WriteAllText(Application.dataPath + "/Log.txt", $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
+
             return null;
         }
     }

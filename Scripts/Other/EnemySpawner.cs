@@ -4,6 +4,7 @@ public class EnemySpawner
 {
     private static bool isSpawning = false;
 
+
     public static async void SpawnEnemy()
     {
         if (isSpawning) return;
@@ -14,10 +15,11 @@ public class EnemySpawner
             PoolManager.Instance.Spawn(PoolType.Circle);
             PoolManager.Instance.Spawn(PoolType.Rectangle);
 
-            GameDataManager.data.timeToWinLeft -= (int)GameDataManager.data.enemySpawnStep;
+            GameDataManager.data.timeToWinLeft -= GameDataManager.data.enemySpawnStep * UnityEngine.Time.timeScale;        
 
-            await Task.Delay((int)GameDataManager.data.enemySpawnStep * 1000);
+            await Task.Delay((int)(GameDataManager.data.enemySpawnStep * 1000));
         }
+        EventManager.eventManager.EndAttack(GameDataManager.data.soldiersCount > 0);
         isSpawning = false;
     }
 }

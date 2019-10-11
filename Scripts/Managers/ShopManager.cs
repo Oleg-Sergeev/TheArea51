@@ -54,7 +54,7 @@ public class ShopManager : MonoBehaviour
             clicker.allClickPower += clicker.clickPowerDefault;
 
             if (clicker.currency == Currency.Soldier)
-                clicker.currentPrice += (clicker.priceDefault / 2) + (clicker.priceDefault * clicker.level);
+                clicker.currentPrice += (clicker.priceDefault / 2) + (clicker.priceDefault / 10 * clicker.level);
             else
                 clicker.currentPrice += clicker.priceDefault / 5 * (clicker.level + 1);
 
@@ -114,7 +114,7 @@ public enum Currency
 {
     public Transform uiObject;
     public Sprite avatar;
-    [HideInInspector] public Text name, description, price;
+    [HideInInspector] public Text name, price;
     [HideInInspector] public Button bttnBuy;
     [HideInInspector] public Image avatarImage, currency;
 }
@@ -209,7 +209,7 @@ public enum Currency
 
         while (hasStart)
         {
-            await System.Threading.Tasks.Task.Delay(1000);
+            await System.Threading.Tasks.Task.Delay((int)(1000 / Time.timeScale));
 
             if (EventManager.eventManager != null && hasStart)
             {
@@ -340,6 +340,8 @@ public enum Currency
 
 [Serializable] public class TimeBooster : Booster
 {
+    public int timeScaleAdder;
+
     public override async void Use()
     {
         if (!IsUsing)
@@ -353,7 +355,7 @@ public enum Currency
 
         IsUsing = true;
 
-        Time.timeScale = 2;
+        Time.timeScale += timeScaleAdder;
 
         while (useTimeRemained > 0)
         {
@@ -361,7 +363,7 @@ public enum Currency
             await System.Threading.Tasks.Task.Delay(1000);
         }
 
-        Time.timeScale = 1;
+        Time.timeScale -= timeScaleAdder;
 
         IsUsing = false;
 
@@ -373,16 +375,37 @@ public enum Currency
 
 [Serializable] public class SoldierBooster : Booster
 {
-    public int soldiers;
-    public void IncreaseSoldiers()
-    {
-        Debug.Log("Increase soldiers");
-        amount--;
-    }
+    public static int SoldierModifier { get; set; } = 1;
+    public int soldiersModifier;
 
-    public override void Use()
+    public async override void Use()
     {
-        throw new NotImplementedException();
+        if (!IsUsing)
+        {
+            if (amount <= 0) return;
+
+            amount--;
+        }
+
+        EventManager.eventManager.UseBooster(name, false);
+
+        IsUsing = true;
+
+        SoldierModifier += soldiersModifier;
+
+        while (useTimeRemained > 0)
+        {
+            useTimeRemained -= 1;
+            await System.Threading.Tasks.Task.Delay(1000);
+        }
+
+        SoldierModifier -= soldiersModifier;
+
+        IsUsing = false;
+
+        EventManager.eventManager.UseBooster(name, true);
+
+        useTimeRemained = useTime;
     }
 }
 

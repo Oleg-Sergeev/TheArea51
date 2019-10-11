@@ -8,47 +8,62 @@ public class GameDataManager : MonoBehaviour
 
     private async void Awake()
     {
-        if ((data = SaveManager.Load()) == null)
+        try
         {
-            data = new GameData();
-        }
+            Time.timeScale = 1;
 
-        EventManager.eventManager = new EventManager();
+            if ((data = SaveManager.Load()) == null)
+            {
+                data = new GameData();
+            }
 
-        CheckForNull(data);
+            EventManager.eventManager = new EventManager();
 
-        StartCoroutine(Save());
-        
-        if (data.clickers.Count != data.clickersCount)
-        {
-            Debug.LogWarning($"Clickers count ({data.clickers.Count}) != data clickers count ({data.clickersCount})");
-            data.hasChangedSaveStructure = true;
-            data.clickersCount = 0;
-            data.clickBonus = 0;
-            data.autoClickerBonus = 0;
-            data.offlineClickBonus = 0;
+            EventManager.eventManager.OnClick += OnClick;
+
+            CheckForNull(data);
+
+            StartCoroutine(Save());
+
+            if (data.clickers.Count != data.clickersCount)
+            {
+                Debug.LogWarning($"Clickers count ({data.clickers.Count}) != data clickers count ({data.clickersCount})");
+                data.hasChangedSaveStructure = true;
+                data.clickersCount = 0;
+                data.clickBonus = 0;
+                data.autoClickerBonus = 0;
+                data.offlineClickBonus = 0;
+                foreach (var cl in data.clickers)
+                {
+                    if (cl.Value is ManualClicker clicker) data.clickBonus += clicker.allClickPower;
+                    else if (cl.Value is AutoClicker aclicker) data.autoClickerBonus += aclicker.allClickPower;
+                    else if (cl.Value is OfflineClicker oclicker) data.offlineClickBonus += oclicker.allClickPower;
+                    else
+                    {
+                        UniversalClicker uclicker = cl.Value as UniversalClicker;
+                        data.clickBonus += uclicker.allClickPower;
+                        data.autoClickerBonus += uclicker.allClickPower * 5;
+                        data.offlineClickBonus += uclicker.allClickPower * 2;
+                    }
+                    data.clickersCount++;
+                }
+            }
+
             foreach (var cl in data.clickers)
             {
-                if (cl.Value is ManualClicker clicker) data.clickBonus += clicker.allClickPower;
-                else if (cl.Value is AutoClicker aclicker) data.autoClickerBonus += aclicker.allClickPower;
-                else if (cl.Value is OfflineClicker oclicker) data.offlineClickBonus += oclicker.allClickPower;
-                else
-                {
-                    UniversalClicker uclicker = cl.Value as UniversalClicker;
-                    data.clickBonus += uclicker.allClickPower;
-                    data.autoClickerBonus += uclicker.allClickPower * 5;
-                    data.offlineClickBonus += uclicker.allClickPower * 2;
-                }
-                data.clickersCount++;
+                IAutocliker autoClicker = cl.Value as IAutocliker;
+                autoClicker?.AutoClick();
+
+                await System.Threading.Tasks.Task.Delay(Random.Range(400, 600));
             }
         }
-
-        foreach (var cl in data.clickers)
+        catch (System.Exception e)
         {
-            IAutocliker autoClicker = cl.Value as IAutocliker;
-            autoClicker?.AutoClick();
-
-            await System.Threading.Tasks.Task.Delay(Random.Range(400, 600));
+            string logPath = Application.dataPath + "/Log.txt";
+            string lastLogs = "";
+            MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
+            if (System.IO.File.Exists(logPath)) lastLogs = System.IO.File.ReadAllText(logPath);
+            System.IO.File.WriteAllText(Application.dataPath + "/Log.txt", $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
         }
 
         void CheckForNull(GameData data)
@@ -59,6 +74,54 @@ public class GameDataManager : MonoBehaviour
             if (data.enemySpawnStep == null) data.enemySpawnStep = 0.2f;
             if (data.clickersCount == null) data.clickersCount = data.clickers.Count;
         }
+    }
+
+    public static void BeginDefend()
+    {
+        EventManager.eventManager.OnHpChange += OnHpChange;
+
+        if (data.maxHp == 0)
+        {
+            data.maxHp = data.soldiersCount;
+            EventManager.eventManager.ChangeHp(data.maxHp);
+        }
+
+        PoolManager.Instance.CreatePools();
+
+        data.isDefend = true;
+    }
+
+    public static void OnHpChange(int hp)
+    {
+        if (!data.isDefend) return;
+
+        if (hp > 0)
+        {
+            if (data.soldiersCount + hp <= data.maxHp)
+                data.soldiersCount += hp;
+            else
+                data.soldiersCount = data.maxHp;
+        }
+        else if (hp <= 0 && data.soldiersCount >= 0)
+        {
+            data.soldiersCount += hp;
+            if (data.soldiersCount <= 0)
+                EventManager.eventManager.EndAttack(false);
+        }
+    }
+
+    public static void OnClick(int clickCount)
+    {
+        if (data.isDefend)
+        {
+            EventManager.eventManager.ChangeHp(clickCount);
+            return;
+        }
+
+        int lastSoldierCount = data.soldiersCount;
+        data.soldiersCount += (int)(clickCount * SoldierBooster.SoldierModifier * UI.Instance.sliderModifier.value);
+        if (data.soldiersCount <= 0 && lastSoldierCount < 0) data.soldiersCount = 0;
+        else if (data.soldiersCount <= 0 && lastSoldierCount > 0) data.soldiersCount = int.MaxValue;
     }
 
     private IEnumerator Save()
@@ -73,55 +136,34 @@ public class GameDataManager : MonoBehaviour
 
     private void OnApplicationFocus(bool focus)
     {
-        if (!focus)
+        try
         {
-            foreach (var ocl in data.clickers)
+            if (!focus)
             {
-                IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
-                offlineClicker?.RememberTime();
+                foreach (var ocl in data.clickers)
+                {
+                    IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
+                    offlineClicker?.RememberTime();
+                }
             }
-        }
-        else
-        {
-            foreach (var ocl in data.clickers)
-            {
-                IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
-                offlineClicker?.CalculateProduction();
-            }
-        }
-
-        SaveManager.Save(data);
-    }
-
-    public static void BeginDefend()
-    {
-        EventManager.eventManager.OnHpChange += OnHpChanged;
-
-        if (data.maxHp == 0)
-        {
-            data.maxHp = data.soldiersCount;
-            EventManager.eventManager.ChangeHp(data.maxHp);
-        }
-
-        data.isDefend = true;
-    }
-
-    public static void OnHpChanged(int hp)
-    {
-        if (!data.isDefend) return;
-
-        if (hp > 0)
-        {
-            if (data.soldiersCount + hp <= data.maxHp)
-                data.soldiersCount += hp;
             else
-                data.soldiersCount = data.maxHp;
+            {
+                foreach (var ocl in data.clickers)
+                {
+                    IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
+                    offlineClicker?.CalculateProduction();
+                }
+            }
+
+            SaveManager.Save(data);
         }
-        else if (hp < 0 && data.soldiersCount > 0)
+        catch (System.Exception e)
         {
-            data.soldiersCount += hp;
-            if (data.soldiersCount <= 0)
-                EventManager.eventManager.EndAttack(false);
+            string logPath = Application.dataPath + "/Log.txt";
+            string lastLogs = "";
+            MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
+            if (System.IO.File.Exists(logPath)) lastLogs = System.IO.File.ReadAllText(logPath);
+            System.IO.File.WriteAllText(Application.dataPath + "/Log.txt", $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
         }
     }
 }

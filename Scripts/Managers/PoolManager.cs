@@ -4,17 +4,16 @@ using UnityEngine;
 public class PoolManager : MonoBehaviour
 {
     public static PoolManager Instance;
-    public Transform target;
+    public Transform target, parent;
     public List<Pool> pools;
     public Dictionary<PoolType, Queue<GameObject>> pooledObjects = new Dictionary<PoolType, Queue<GameObject>>();
-    public Transform parent;
 
     private int preferedWidth = 1080;
     private int preferedHeight = 1920;
 
     private void Awake() => Instance = this;
 
-    private void Start()
+    public void CreatePools()
     {
         foreach (var currentPool in pools)
         {
@@ -113,7 +112,7 @@ public class PoolManager : MonoBehaviour
         public bool allowRuntimeCreating;
     }
 }
-// ???
+
 public enum PoolType
 {
     Square,

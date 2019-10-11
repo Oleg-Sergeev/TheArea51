@@ -34,7 +34,7 @@ public class MyDebug : MonoBehaviour
     public static void Log(object message)
     {
         AddMessage(Color.white, message);
-        if (GameDataManager.data.debugEnabled)
+        if (GameDataManager.data?.debugEnabled ?? false)
         {
             Debug.Log(message);
         }
@@ -42,7 +42,7 @@ public class MyDebug : MonoBehaviour
     public static void LogWarning(object message)
     {
         AddMessage(new Color(1, 0.8f, 0), message);
-        if (GameDataManager.data.debugEnabled)
+        if (GameDataManager.data?.debugEnabled ?? false)
         {
             Debug.LogWarning(message);
         }
@@ -50,7 +50,7 @@ public class MyDebug : MonoBehaviour
     public static void LogError(object message)
     {
         AddMessage(Color.red, message);
-        if (GameDataManager.data.debugEnabled)
+        if (GameDataManager.data?.debugEnabled ?? false)
         {
             Debug.LogError(message);
         }

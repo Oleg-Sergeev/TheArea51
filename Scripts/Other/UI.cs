@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,25 +6,25 @@ using UnityEngine.UI;
 public class UI : MonoBehaviour
 {
     public static UI Instance;
-    private static readonly string[] languages = { "ru", "en" };
-    private const string PASSWORD = "ZgTA51OV199";
     public Calendar calendar;
-    public RectTransform rect, description, debugClickerMenu, testVP;
+    public RectTransform rect, debugClickerMenu;
+    public RectTransform[] descriptions;
     public Sprite[] langSpritesArr;
-    public Image currentLanguage, toggleSFX, buttonSFX, sliderFPS, activePanelPointer, area51HpImage;
+    public Image currentLanguage, toggleSFX, buttonSFX, sliderFPS, sliderModifierColor, activePanelPointer, area51HpImage;
     public Slider sliderModifier, area51Hp;
-    public Text soldiers, aliensHearts, textOfflineClickerBonus, textAutoclickerBonus, textClickBonus,
+    public Text soldiers, soldiersFull, aliensHearts, aliensHeartsFull, textOfflineClickerBonus, textAutoclickerBonus, textClickBonus,
         prestigeClickBonus, prestigeAutoclickerBonus, prestigeOfflineClickerBonus, prClicker, prAutoclicker, prOfflineClicker,
-        textModifier, activePanel, activeSection, prestige, prestigeLvl, gameVersion, debugLng;
+        activePanelText, activeSection, prestige, prestigeLvl, gameVersion, debugLng;
     public Text[] localizedTexts;
-    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, modifier, prestigeBttn, passwordInput, speedUp;
+    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, prestigeBttn, passwordInput, speedUp;
     public GameObject[] panelsArr, tutorials;
     private static Dictionary<string, ClickerItem<Clicker>> clickItems;
     private static Dictionary<string, BoosterItem<Booster>> boosterItems;
     private static Dictionary<string, GameObject> panels;
     private static Dictionary<string, Sprite> langSprites;
-
-    float speed = 0, heightVP, calendarDay = 60;
+    private static readonly string[] languages = { "ru", "en" };
+    private const string PASSWORD = "ZgTA51OV199";
+    private float calendarDay = 60;
 
 
     private void Awake() => Instance = this;
@@ -35,7 +34,6 @@ public class UI : MonoBehaviour
         if (Application.isEditor) GameDataManager.data.passwordDebug = PASSWORD;
 
         #region SubscribeEvents
-        EventManager.eventManager.OnClick += OnClick;
         EventManager.eventManager.OnAnyAction += OnChangeText;
         EventManager.eventManager.OnBoosterUsed += OnBoosterUse;
         Application.lowMemory += OnLowMemory;
@@ -58,17 +56,12 @@ public class UI : MonoBehaviour
         gameVersion.text = $"v{Application.version}";
 
         prestigeLvl.text = GameDataManager.data.prestigeLvl.ToString();
-
-        heightVP = -testVP.rect.height + 400;
-
+        
         sliderModifier.minValue = 1;
         sliderModifier.value = 1;
         sliderModifier.maxValue = 5;
-        textModifier.text = $"{sliderModifier.value}x";
         #endregion
-
-        modifier.SetActive(false);
-
+        
         prestigeBttn.SetActive(false);
 
         foreach (var i in langSpritesArr)
@@ -258,23 +251,21 @@ public class UI : MonoBehaviour
             var clicker = clickerItem.Clicker;
 
             InitializeShopInfo(clickerItem.uiInfo);
-            clickerItem.uiInfo.level = clickerItem.uiInfo.uiObject.GetChild(4).GetComponent<Text>();
-            clickerItem.uiInfo.clickPower = clickerItem.uiInfo.uiObject.GetChild(6).GetComponent<Text>();
+            clickerItem.uiInfo.level = clickerItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
+            clickerItem.uiInfo.clickPower = clickerItem.uiInfo.uiObject.GetChild(5).GetComponent<Text>();
 
             clickerItems.Add(clicker.name, clickerItem);
 
             clickerItems[clicker.name].uiInfo.name.name = clicker.name;
-            clickerItems[clicker.name].uiInfo.description.name = clicker.name + "D";
 
             clickerItems[clicker.name].uiInfo.avatarImage.sprite = clickerItem.uiInfo.avatar;
             clickerItems[clicker.name].uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
-            clickerItems[clicker.name].uiInfo.description.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.description.name);
             clickerItems[clicker.name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
             clickerItems[clicker.name].uiInfo.price.text = FormatMoney(clicker.currentPrice);
             clickerItems[clicker.name].uiInfo.currency.sprite = Resources.Load<Sprite>(clickerItems[clicker.name].Clicker.currency.ToString());
             if (!(clicker is UniversalClicker))
             {
-                string key = clicker.GetType() == typeof(Clicker) ? "Click" : "Sec";
+                string key = clicker is ManualClicker ? "Click" : "Sec";
                 clickerItems[clicker.name].uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText(key)}";
             }
             else
@@ -291,17 +282,15 @@ public class UI : MonoBehaviour
             var booster = boosterItem.Booster;
 
             InitializeShopInfo(boosterItem.uiInfo);
-            boosterItem.uiInfo.amount = boosterItem.uiInfo.uiObject.GetChild(4).GetComponent<Text>();
-            boosterItem.uiInfo.bttnUse = boosterItem.uiInfo.uiObject.GetChild(6).GetComponent<Button>();
+            boosterItem.uiInfo.amount = boosterItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
+            boosterItem.uiInfo.bttnUse = boosterItem.uiInfo.uiObject.GetChild(5).GetComponent<Button>();
 
             boosterItems.Add(booster.name, boosterItem);
 
             boosterItems[booster.name].uiInfo.name.name = booster.name;
-            boosterItems[booster.name].uiInfo.description.name = booster.name + "D";
 
             boosterItems[booster.name].uiInfo.avatarImage.sprite = boosterItem.uiInfo.avatar;
             boosterItems[booster.name].uiInfo.name.text = LanguageManager.GetLocalizedText(boosterItem.uiInfo.name.name);
-            boosterItems[booster.name].uiInfo.description.text = LanguageManager.GetLocalizedText(boosterItem.uiInfo.description.name);
             boosterItems[booster.name].uiInfo.amount.text = $"{booster.amount}x";
             boosterItems[booster.name].uiInfo.price.text = booster.priceDefault.ToString();
             boosterItems[booster.name].uiInfo.currency.sprite = Resources.Load<Sprite>(boosterItems[booster.name].Booster.currency.ToString());
@@ -312,9 +301,8 @@ public class UI : MonoBehaviour
             shopItem.avatarImage = shopItem.uiObject.GetChild(0).GetChild(0).GetComponent<Image>();
             shopItem.bttnBuy = shopItem.uiObject.GetChild(1).GetComponent<Button>();
             shopItem.name = shopItem.uiObject.GetChild(2).GetComponent<Text>();
-            shopItem.description = shopItem.uiObject.GetChild(3).GetComponent<Text>();
-            shopItem.price = shopItem.uiObject.GetChild(5).GetComponent<Text>();
-            shopItem.currency = shopItem.uiObject.GetChild(7).GetComponent<Image>();
+            shopItem.price = shopItem.uiObject.GetChild(4).GetComponent<Text>();
+            shopItem.currency = shopItem.uiObject.GetChild(6).GetComponent<Image>();
         }
     }
 
@@ -330,13 +318,33 @@ public class UI : MonoBehaviour
         return panels[name];
     }
 
+    public void Panel_(Text text) => OpenOrClosePanel(text.name, text);
+    public void Section(Text text) => OpenOrCloseSection(text.name, text);
+
+    public void OffBeforeStorm()
+    {
+        Debug.Log("Before");
+        beforeStorm.SetActive(false);
+        Time.timeScale = timeScale;
+        NextDay();
+    }
+
+    public void Click()
+    {
+        EventManager.eventManager.Click(GameDataManager.data.clickBonus);
+        IncreaseSpeed();
+    }
+
+    private float timeScale;
     private void NextDay()
     {
         if (!GameDataManager.data.wasAttack && calendar.number.text == "20" && calendar.month.text == LanguageManager.GetLocalizedText("Sept"))
         {
+            Debug.Log("Storm");
             if (!GameDataManager.data.isDefend)
             {
                 beforeStorm.SetActive(true);
+                timeScale = Time.timeScale;
                 Time.timeScale = 0;
                 GameDataManager.data.isDefend = true;
                 return;
@@ -361,96 +369,173 @@ public class UI : MonoBehaviour
         calendar++;
     }
 
-    public void Panel_(Text text) => OpenOrClosePanel(text.name, text);
-    public void Section(Text text) => OpenOrCloseSection(text.name, text);
+    public void ShowFullCurrencyCount(GameObject name)
+    {
+        MovingObj obj = MovingObjList.GetObj(name.name);
 
-    public void OffBeforeStorm()
-    {
-        beforeStorm.SetActive(false);
-        Time.timeScale = 1;
-        NextDay();
-    }
-
-    public void Click()
-    {
-        EventManager.eventManager.Click(GameDataManager.data.clickBonus);
-    }
-
-    #region DebugModidier
-    private void EnableModifier()
-    {
-        StartCoroutine(Modifier());
-        StartCoroutine(Test());
-    }
-    private IEnumerator Test()
-    {
-        while (modifier.activeSelf)
+        if (obj.isActiveAndEnabled) MoveToStartPos(name.name, default, OnClose);
+        else
         {
-            if (GameDataManager.data.debugEnabled) textModifier.text = $"{string.Format("{0:0.00}", sliderModifier.value)}x  // скорость - {string.Format("{0:0.00}", speed)}";
-
-            else textModifier.text = $"{string.Format("{0:0.00}", sliderModifier.value)}x";
-
-            yield return new WaitForSeconds(0.04f);
+            obj.gameObject.SetActive(true);
+            MoveToTarget(name.name);
         }
     }
-    float checkTimer = 0;
-    float timer = 0;
-    float timerStart = 25;
-    float koef_smoothness = 0.007f;
-    float koef_1 = 0.001f;
-    int koef_2 = 100;
-    int maxBonus = 0;
-    public Text koef1, koef2, koefSmoothness;
-    private IEnumerator Modifier()
+
+    private void MoveToTarget(string name, Vector2 newTarget = default, float newSpeed = default, Action<GameObject> onEnd = default)
     {
-        timer = timerStart;
-        speed = 0;
-        maxBonus = 0;
-        modifier.SetActive(true);
-        sliderModifier.minValue = 1;
-        sliderModifier.value = 1;
-        sliderModifier.maxValue = 5;
-        textModifier.text = $"{sliderModifier.value}x";
+        MovingObjList.GetObj(name)?.MoveToTarget(newTarget, newSpeed, onEnd);
+    }
+    private void MoveToStartPos(string name, float newSpeed = default, Action<GameObject> onEnd = default)
+    {
+        MovingObjList.GetObj(name)?.MoveToStartPos(newSpeed, onEnd);
+    }
 
-        while (timer > 0)
+    private string FormatMoney(double money, FormatType formatType = FormatType.Truncate)
+    {
+        switch (formatType)
         {
-            if (sliderModifier.value >= 1)
+            case FormatType.Truncate:
+                return Truncate();
+            case FormatType.SplitUp:
+                return SplitUp();
+            default: return null;
+        }
+
+        string Truncate()
+        {
+            string[] names = { "", "K", "M" };
+            int i = 0;
+
+            while (i + 1 < names.Length && money >= 1000)
             {
-                checkTimer -= Time.fixedDeltaTime;
-                if ((int)sliderModifier.value > maxBonus) maxBonus = (int)sliderModifier.value;
+                money /= 1000;
+                i++;
+            }
+            if (i > 0 && Math.Truncate(money) != money)
+            {
+                return $"{money.ToString("F2")}{names[i]}";
+            }
+            return $"{(int)money}{names[i]}";
+        }
 
-                if (speed > 0.3f) speed -= sliderModifier.value * koef_1;
-                else speed -= sliderModifier.value * (koef_1 / 2);
+        string SplitUp() => $"{money:# ### ### ###}";
+    }
+    
+    private GameObject closingPanel;
+    private void OpenOrClosePanel(string name, Text text)
+    {
+        if (!panels[name].activeSelf)
+        {
+            if (activePanelText != null)
+            {
+                activePanelText.color = Color.white;
+                closingPanel = panels[activePanelText.name];
 
-                if (checkTimer < -1) speed -= sliderModifier.value * (-checkTimer * (koef_1 * 2));
-
-                sliderModifier.value += speed * koef_smoothness;
-
-                sliderModifier.transform.GetChild(1).GetChild(0).GetComponent<Image>().color = Color.HSVToRGB(sliderModifier.value / 20, 1, 1);
-
-                if (sliderModifier.value <= sliderModifier.minValue && sliderModifier.minValue > 1)
+                MoveToStartPos(activePanelText.name, default, (obj) =>
                 {
-                    sliderModifier.maxValue /= 2;
-                    sliderModifier.minValue /= 2;
+                    OnClose(obj);
+                    closingPanel = null;
+                });
+
+                if (panels["LangSelect"].activeSelf)
+                {
+                    MoveToStartPos("LangSelect", default, OnClose);
+                    rect.rotation = Quaternion.Euler(0, 0, 0);
                 }
             }
+            else activePanelPointer.color = Color.green;
 
-            timer -= Time.fixedDeltaTime;
+            activePanelText = text;
+            activePanelText.color = Color.green;
+            activePanelPointer.transform.position = activePanelText.transform.position;
 
-            yield return null;
+            panels[name].SetActive(true);
+            MoveToTarget(name);
         }
+        else
+        {
+            if (activePanelText == null || closingPanel == panels[name]) return;
 
-        MyDebug.Log($"Ваш бонус - {maxBonus}x");
+            activePanelText.color = Color.white;
+            activePanelPointer.color = Color.clear;
+            activePanelText = null;
 
-        speed = 0;
-        sliderModifier.minValue = 1;
-        sliderModifier.value = 1;
-        sliderModifier.maxValue = 5;
-        textModifier.text = $"{sliderModifier.value}x";
-        modifier.SetActive(false);
-        Invoke("EnableModifier", UnityEngine.Random.Range(5, 6));
+            MoveToStartPos(name, default, (obj) =>
+            {
+                OnClose(obj);
+                closingPanel = null;
+            });
+
+            if (panels["LangSelect"].activeSelf)
+            {
+                MoveToStartPos("LangSelect", default, OnClose);
+                rect.rotation = Quaternion.Euler(0, 0, 0);
+            }
+        }
     }
-    #endregion
+
+    private void OpenOrCloseSection(string name, Text text)
+    {
+        activeSection.color = Color.white;
+        panels[activeSection.name].SetActive(false);
+
+        activeSection = text;
+
+        panels[name].SetActive(true);
+        activeSection.color = Color.green;
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F)) IncreaseSpeed();
+        if (Input.GetKeyDown(KeyCode.G)) IncreaseSpeed();
+    }
+
+    #region Modifier
+    private float speed = 0, speedLimit = 0.002f, timer = 0.25f;
+
+    public void OnChangeValue()
+    {
+        sliderModifierColor.color = Color.HSVToRGB((sliderModifier.value - 1) / 8, 1, 1);
+    }
+
+    float deltaClickTime = 0;
+    private void IncreaseSpeed()
+    {
+        timer = 0.25f * (1 / sliderModifier.value * 2);
+        if (0.25f * (float)Math.Pow(0.7f, Math.Floor(sliderModifier.value) - 1) >= deltaClickTime) deltaClickTime = 0;
+        if (speed <= speedLimit) speed += (0.25f * (float)Math.Pow(0.7f,Math.Floor(sliderModifier.value) - 1) - deltaClickTime) * speedLimit;
+
+        deltaClickTime = 0;
+        ChangeValue();
+    }
+
+    private bool isRunning;
+    private async void ChangeValue()
+    {
+        if (isRunning) return;
+        isRunning = true;
+        sliderModifier.value += speed;
+
+        while (sliderModifier.value > 1)
+        {
+            timer -= Time.unscaledDeltaTime;
+            if (timer <= 0)
+            {
+                if (speed > -speedLimit * sliderModifier.value) speed -= speedLimit / 10;
+                else speed = -speedLimit * sliderModifier.value;
+            }
+            sliderModifier.value += speed;
+            
+
+            deltaClickTime += Time.unscaledDeltaTime;
+            await System.Threading.Tasks.Task.Yield();
+        }
+        speed = 0;
+        isRunning = false;
+    }
+
+    #endregion /Modifier
 
     #region Tutorial
 
@@ -459,12 +544,14 @@ public class UI : MonoBehaviour
         if (enable)
         {
             await System.Threading.Tasks.Task.Delay(1500);
+
             intro.SetActive(true);
-            MovingObjList.GetObj(intro.name).MoveToTarget();
+
+            MoveToTarget(intro.name);
         }
         else
         {
-            MovingObjList.GetObj(intro.name).MoveToStartPos(default, OnClose);
+            MoveToStartPos(intro.name, default, OnClose);
         }
     }
 
@@ -522,33 +609,16 @@ public class UI : MonoBehaviour
     #endregion /Tutorial
 
     #region OnEvent
-    //???
-    private void OnClick(int clickCount)
-    {
-        if (GameDataManager.data.isDefend)
-        {
-            EventManager.eventManager.ChangeHp(clickCount);
-            return;
-        }
-
-        if (GameDataManager.data.soldiersCount + (int)(clickCount * sliderModifier.value) >= 0)
-            GameDataManager.data.soldiersCount += (int)(clickCount * sliderModifier.value * Time.timeScale);
-        else
-            GameDataManager.data.soldiersCount = 0;
-
-        if (GameDataManager.data.wasAttack && GameDataManager.data.hasLost && GameDataManager.data.soldiersCount >= 1000000)
-        {
-            panels["Prestige"].transform.GetChild(2).GetComponent<Button>().interactable = true;
-            GameDataManager.data.hasLost = false;
-            OpenPrestigePanel();
-        }
-    }
 
     private void OnChangeText()
     {
-        aliensHearts.text = FormatMoney(GameDataManager.data.aliensHearts);
+        if (soldiers == null) return;
 
         soldiers.text = FormatMoney(GameDataManager.data.soldiersCount);
+        soldiersFull.text = FormatMoney(GameDataManager.data.soldiersCount, FormatType.SplitUp);
+
+        aliensHearts.text = FormatMoney(GameDataManager.data.aliensHearts);
+        aliensHeartsFull.text = FormatMoney(GameDataManager.data.aliensHearts, FormatType.SplitUp);
 
         textClickBonus.text = $"+{FormatMoney(GameDataManager.data.clickBonus)}/{LanguageManager.GetLocalizedText("Click")}";
 
@@ -559,6 +629,13 @@ public class UI : MonoBehaviour
         if (prestigeAutoclickerBonus.gameObject.activeSelf) prestigeAutoclickerBonus.text = $"+{FormatMoney((int)(GameDataManager.data.autoClickerBonus * (GameDataManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
 
         if (prestigeOfflineClickerBonus.gameObject.activeSelf) prestigeOfflineClickerBonus.text = $"+{FormatMoney((int)(GameDataManager.data.offlineClickBonus * (GameDataManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
+
+        if (GameDataManager.data.wasAttack && GameDataManager.data.hasLost && GameDataManager.data.soldiersCount >= 1000000)
+        {
+            panels["Prestige"].transform.GetChild(2).GetComponent<Button>().interactable = true;
+            GameDataManager.data.hasLost = false;
+            OpenPrestigePanel();
+        }
 
         foreach (var i in clickItems) CheckPossibilityToBuy(i.Value.Clicker);
         foreach (var i in boosterItems)
@@ -614,10 +691,10 @@ public class UI : MonoBehaviour
     {
         if (GameDataManager.data.soldiersCount < 0) GameDataManager.data.soldiersCount = 0;
 
-        area51HpImage.color = Color.HSVToRGB(area51Hp.value / (GameDataManager.data.maxHp * 3), 1, 1);
-
         area51Hp.value = GameDataManager.data.soldiersCount;
         soldiers.text = FormatMoney(GameDataManager.data.soldiersCount);
+
+        area51HpImage.color = Color.HSVToRGB(area51Hp.value / (GameDataManager.data.maxHp * 3), 1, 1);
     }
 
     private void OnEndAttack(bool isWin)
@@ -667,6 +744,12 @@ public class UI : MonoBehaviour
 
     public void ShowDescription(Text name)
     {
+        RectTransform description = null;
+
+        if (clickItems.ContainsKey(name.name)) description = descriptions[0];
+        else if (boosterItems.ContainsKey(name.name)) description = descriptions[1];
+        else return;
+
         if (description.gameObject.activeSelf && description.position == name.transform.parent.GetChild(1).position)
         {
             description.gameObject.SetActive(false);
@@ -702,7 +785,18 @@ public class UI : MonoBehaviour
 
                         clickerItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
                         clickerItem.uiInfo.price.text = FormatMoney(clicker.currentPrice);
-                        clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";
+                        if (clicker is UniversalClicker)
+                        {
+                            clickerItem.uiInfo.clickPower.text =
+                            $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}" +
+                            $"\n+{clicker.clickPowerDefault * 5}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Auto")}" +
+                            $"\n+{(int)(clicker.clickPowerDefault * 1.5f)}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Off_")}";
+                        }
+                        else
+                        {
+                            string key = clicker is ManualClicker ? "Click" : "Sec";
+                            clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText(key)}";
+                        }
                     }
                     else if (product is Booster booster)
                     {
@@ -811,15 +905,19 @@ public class UI : MonoBehaviour
 
     public void Languages()
     {
-        if (!panels["LangSelect"].activeSelf)
+        string name = "LangSelect";
+        if (!panels[name].activeSelf)
         {
-            panels["LangSelect"].SetActive(true);
-            MovingObjList.GetObj("LangSelect").MoveToTarget();
+            panels[name].SetActive(true);
+
+            MoveToTarget(name);
+
             rect.rotation = Quaternion.Euler(0, 0, 180);
         }
         else
         {
-            MovingObjList.GetObj("LangSelect").MoveToStartPos(default, OnClose);
+            MoveToStartPos(name, default, OnClose);
+
             rect.rotation = Quaternion.Euler(0, 0, 0);
         }
     }
@@ -833,7 +931,8 @@ public class UI : MonoBehaviour
         ChangeTexts();
         OnChangeText();
         
-        MovingObjList.GetObj("LangSelect")?.MoveToStartPos(default, OnClose);
+        MoveToStartPos("LangSelect", default, OnClose);
+
         rect.rotation = Quaternion.Euler(0, 0, 0);
 
         void ChangeShopItemsInfo()
@@ -844,13 +943,11 @@ public class UI : MonoBehaviour
             {
                 Clicker clicker = clickerItem.Clicker;
                 clickerItem.uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
-                clickerItem.uiInfo.description.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.description.name);
                 clickerItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
-                clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText("Click")}";
 
                 if (!(clicker is UniversalClicker))
                 {
-                    string key = clicker.GetType() == typeof(Clicker) ? "Click" : "Sec";
+                    string key = clicker is ManualClicker ? "Click" : "Sec";
                     clickerItem.uiInfo.clickPower.text = $"+{clicker.clickPowerDefault}/{LanguageManager.GetLocalizedText(key)}";
                 }
                 else
@@ -877,41 +974,6 @@ public class UI : MonoBehaviour
 
     #endregion /More
 
-    #region Notes
-
-    public void NoteList(string input)
-    {
-        var temp = input.Split();
-        (string name, int numberInList) = (temp[0], int.Parse(temp[1]));
-
-        var t = GameObject.Find("ContentTest").GetComponent<RectTransform>();
-
-        if (panels[name].activeSelf)
-        {
-            panels["NotesList"].SetActive(false);
-            panels[name].SetActive(false);
-            testVP.sizeDelta = new Vector2(0, 0);
-        }
-        else
-        {
-            if (activeNotesList != null) activeNotesList.SetActive(false);
-            activeNotesList = panels[name];
-            panels["NotesList"].SetActive(true);
-            panels[name].SetActive(true);
-            testVP.sizeDelta = new Vector2(0, heightVP);
-        }
-        t.anchoredPosition = new Vector2(0, 350 * (numberInList - 1));
-    }
-
-    public GameObject note, panel;
-    public void Note()
-    {
-        note.SetActive(true);
-        panel.SetActive(true);
-    }
-
-    #endregion /Notes
-
     #region Prestige
 
     public void ApplyPrestige()
@@ -919,6 +981,8 @@ public class UI : MonoBehaviour
         try
         {
             Time.timeScale = 1;
+
+            MovingObjList.Clear();
 
             int aliensHearts = GameDataManager.data.aliensHearts;
             int prestige = GameDataManager.data.prestigeLvl;
@@ -942,7 +1006,7 @@ public class UI : MonoBehaviour
             if (enemySpawnStep >= 0.02f) enemySpawnStep *= 0.75f;
 
             GameDataManager.data.aliensHearts = aliensHearts + (prestige * 1000);
-            GameDataManager.data.soldiersCount = 150000 * prestige + 51;
+            GameDataManager.data.soldiersCount = 1000000 * prestige + 51;
             GameDataManager.data.prestigeLvl = prestige;
             GameDataManager.data.timeToWinLeft = timeToWinLeft;
             GameDataManager.data.enemySpawnStep = enemySpawnStep;
@@ -1003,12 +1067,12 @@ public class UI : MonoBehaviour
         EnableDebug();
     }
 
-    public void IncreaseSoldiers()
+    public void IncreaseSoldiers(int soldiers)
     {
-        if (GameDataManager.data.soldiersCount + 1000000000 > 0)
+        if (GameDataManager.data.soldiersCount + soldiers > 0)
         {
-            GameDataManager.data.soldiersCount += 1000000000;
-            GameDataManager.data.aliensHearts += 1000;
+            GameDataManager.data.soldiersCount += soldiers;
+            GameDataManager.data.aliensHearts += soldiers / 1000;
             OnChangeText();
         }
     }
@@ -1026,103 +1090,6 @@ public class UI : MonoBehaviour
         Application.Quit();
     }
 
-    public void OffModifier()
-    {
-        if (timer > 0) timer = 0;
-        MyDebug.Log("*** Модификатор выключен ***");
-    }
-
-    public void ChangeTimer()
-    {
-        if (timerStart < 120) timerStart += 5;
-        else timerStart = 5;
-        MyDebug.Log($"*** время действия модификатора равно {timerStart} сек ***");
-    }
-
-    public void ChangeKoef_1(Slider slider)
-    {
-        koef_1 = slider.value;
-        koef1.text = slider.value.ToString();
-    }
-    public void ChangeKoef_2(Slider slider)
-    {
-        koef_2 = (int)slider.value;
-        koef2.text = slider.value.ToString();
-    }
-    public void ChangeKoef_smoothness(Slider slider)
-    {
-        koef_smoothness = slider.value;
-        koefSmoothness.text = slider.value.ToString();
-    }
-
-    public void DefaultSettings()
-    {
-        koef_1 = 0.001f;
-        koef_2 = 100;
-        koef_smoothness = 0.007f;
-
-        koef1.text = koef_1.ToString();
-        koef2.text = koef_2.ToString();
-        koefSmoothness.text = koef_smoothness.ToString();
-
-        GameObject.Find("Debug_Slider (0)").GetComponent<Slider>().value = 0.001f;
-        GameObject.Find("Debug_Slider (1)").GetComponent<Slider>().value = 100;
-        GameObject.Find("Debug_Slider (2)").GetComponent<Slider>().value = 0.007f;
-
-        MyDebug.Log("*** Настройки по умолчанию назначены ***");
-    }
-
-    public Text debugCurrentPrice;
-    private string currentClicker;
-    public void ShowClickerMenu(Text name)
-    {
-        if (debugClickerMenu.gameObject.activeSelf && debugClickerMenu.position == name.transform.parent.GetChild(1).position)
-        {
-            debugClickerMenu.gameObject.SetActive(false);
-            return;
-        }
-        debugClickerMenu.gameObject.SetActive(true);
-        debugClickerMenu.position = name.transform.parent.GetChild(1).position;
-
-        UpdateText(name.name);
-
-        currentClicker = name.name;
-    }
-
-    public void NewPrice(Text newPrice)
-    {
-        if (clickItems.ContainsKey(currentClicker))
-        {
-            Clicker clicker = clickItems[currentClicker].Clicker;
-            clicker.priceDefault = int.Parse(newPrice.text);
-            clicker.currentPrice = clicker.priceDefault;
-            clicker.level = 0;
-        }
-        else
-        {
-            MyDebug.LogError($"Clicker {currentClicker} not found");
-            return;
-        }
-
-        UpdateText(currentClicker);
-    }
-
-    private void UpdateText(string name)
-    {
-        if (clickItems.ContainsKey(name))
-        {
-            debugCurrentPrice.text = clickItems[name].Clicker.currentPrice.ToString();
-
-            clickItems[name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clickItems[name].Clicker.level}";
-            clickItems[name].uiInfo.price.text = clickItems[name].Clicker.currentPrice.ToString();
-        }
-        else
-        {
-            MyDebug.LogError($"Clicker {name} not found");
-            return;
-        }
-    }
-
     public void OnLowMemory()
     {
         MyDebug.LogWarning($"*** Low memory ***");
@@ -1131,77 +1098,6 @@ public class UI : MonoBehaviour
     }
 
     #endregion /Debug
-
-    private string FormatMoney(float money)
-    {
-        string[] names = { "", "K", "M" };
-        int i = 0;
-
-        while (i + 1 < names.Length && money >= 1000)
-        {
-            money /= 1000;
-            i++;
-        }
-        if (i > 0 && Math.Truncate(money) != money)
-        {
-            return $"{money.ToString("F2")}{names[i]}";
-        }
-        return $"{(int)money}{names[i]}";
-    }
-
-    private void OpenOrClosePanel(string name, Text text)
-    {
-        if (!panels[name].activeSelf)
-        {
-            if (activePanel != null)
-            {
-                activePanel.color = Color.white;
-
-                MovingObjList.GetObj(activePanel.name).MoveToStartPos(default, OnClose);
-
-                if (panels["LangSelect"].activeSelf)
-                {
-                    MovingObjList.GetObj("LangSelect").MoveToStartPos(default, OnClose);
-                    rect.rotation = Quaternion.Euler(0, 0, 0);
-                }
-            }
-            else activePanelPointer.color = Color.green;
-
-            activePanel = text;
-            activePanel.color = Color.green;
-            activePanelPointer.transform.position = activePanel.transform.position;
-
-            panels[name].SetActive(true);
-            MovingObjList.GetObj(name)?.MoveToTarget();
-        }
-        else
-        {
-            if (activePanel == null) return;
-
-            activePanel.color = Color.white;
-            activePanel = null;
-            activePanelPointer.color = Color.clear;
-
-            MovingObjList.GetObj(name)?.MoveToStartPos(default, OnClose);
-
-            if (panels["LangSelect"].activeSelf)
-            {
-                MovingObjList.GetObj("LangSelect").MoveToStartPos(default, OnClose);
-                rect.rotation = Quaternion.Euler(0, 0, 0);
-            }
-        }
-    }
-
-    private void OpenOrCloseSection(string name, Text text)
-    {
-        activeSection.color = Color.white;
-        panels[activeSection.name].SetActive(false);
-
-        activeSection = text;
-
-        panels[name].SetActive(true);
-        activeSection.color = Color.green;
-    }
 
     [Serializable]
     public struct Calendar
@@ -1252,6 +1148,12 @@ public class UI : MonoBehaviour
 
             GameDataManager.data.month = months.Peek();
         }
+    }
+
+    private enum FormatType
+    {
+        Truncate,
+        SplitUp
     }
 }
 

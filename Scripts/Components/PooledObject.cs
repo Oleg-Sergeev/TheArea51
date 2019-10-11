@@ -17,14 +17,16 @@ public class PooledObject : MonoBehaviour, IPooledObj
 
     private void FixedUpdate()
     {
-        transform.Translate(direction.normalized * Time.deltaTime * Random.Range(0.7f + GameDataManager.data.prestigeLvl,1.4f + GameDataManager.data.prestigeLvl));
-        lifeTime -= Time.fixedDeltaTime;
+        transform.Translate(direction.normalized * Time.deltaTime * Random.Range(0.5f + (GameDataManager.data.prestigeLvl / 2),1.5f + (GameDataManager.data.prestigeLvl / 2)));
+
+        lifeTime -= Time.deltaTime;
         if (lifeTime <= 0) PoolManager.Instance.Hide(gameObject, type);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        EventManager.eventManager.ChangeHp(Random.Range(-100 - (1000 * GameDataManager.data.prestigeLvl),-500 - (1000 * GameDataManager.data.prestigeLvl)));
+        float damage = (Random.Range(-500, -1000) - (1000 * GameDataManager.data.prestigeLvl)) * Time.timeScale;
+        EventManager.eventManager.ChangeHp((int)damage);
         
         PoolManager.Instance.Hide(gameObject, type);
     }
