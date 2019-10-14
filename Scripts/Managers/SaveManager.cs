@@ -8,57 +8,65 @@ public static class SaveManager
 
     public static void Save(GameData data)
     {
-        string path = "";
+        string generalPath = "";
 #if UNITY_ANDROID && !UNITY_EDITOR
-    path = Application.persistentDataPath + "/Save.zg";
+        generalPath = Application.persistentDataPath;
 #endif
 #if UNITY_EDITOR
-        path = Application.dataPath + "/Save.zg";
+        generalPath = Application.dataPath;
 #endif
         try
         {
+            string savePath = generalPath + "/Save.zg";
+
             if (!deleteGame)
             {
-                using (FileStream fileStream = new FileStream(path, FileMode.Create))
+                using (FileStream fileStream = new FileStream(savePath, FileMode.Create))
                 {
                     BinaryFormatter formatter = new BinaryFormatter();
 
                     formatter.Serialize(fileStream, data);
                 }
-                File.WriteAllText(Application.dataPath + "/DebugSave.json", JsonUtility.ToJson(data));
             }
             else
             {
-                File.Delete(path);
-                File.Delete(path + ".meta");
+                File.Delete(savePath);
+                File.Delete(savePath + ".meta");
             }
         }
         catch (System.Exception e)
         {
-            string logPath = Application.dataPath + "/Log.txt";
+            string logPath = generalPath + "/Log.txt";
+
             string lastLogs = "";
-            MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
+            string currentLog = $"*** Error: {e.StackTrace} /// {e.Message} ***";
+
+            MyDebug.LogError(currentLog);
+
             if (File.Exists(logPath)) lastLogs = File.ReadAllText(logPath);
-            File.WriteAllText(Application.dataPath + "/Log.txt", $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
+
+            File.WriteAllText(logPath, $"{lastLogs}\n{currentLog}");
         }
     }
 
     public static GameData Load()
     {
-        string path = "";
+        string generalPath = "";
 #if UNITY_ANDROID && !UNITY_EDITOR
-        path = Application.persistentDataPath + "/Save.zg";
+        generalPath = Application.persistentDataPath;
 #endif
 #if UNITY_EDITOR
-        path = Application.dataPath + "/Save.zg";
+        generalPath = Application.dataPath;
 #endif
-        if (!File.Exists(path)) return null;
-
         try
         {
+            string savePath = generalPath + "/Save.zg";
+
+            if (!File.Exists(savePath)) return null;
+
             BinaryFormatter formatter = new BinaryFormatter();
 
-            using (FileStream fileStream = new FileStream(path, FileMode.OpenOrCreate))
+            using (FileStream fileStream = new FileStream(savePath, FileMode.OpenOrCreate))
             {
                 GameData data = formatter.Deserialize(fileStream) as GameData;
 
@@ -67,11 +75,12 @@ public static class SaveManager
         }
         catch (System.Exception e)
         {
-            string logPath = Application.dataPath + "/Log.txt";
+            string logPath = generalPath + "/Log.txt";
+
             string lastLogs = "";
             MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
             if (File.Exists(logPath)) lastLogs = File.ReadAllText(logPath);
-            File.WriteAllText(Application.dataPath + "/Log.txt", $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
+            File.WriteAllText(logPath, $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
 
             return null;
         }

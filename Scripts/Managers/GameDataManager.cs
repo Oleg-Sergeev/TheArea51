@@ -119,7 +119,7 @@ public class GameDataManager : MonoBehaviour
         }
 
         int lastSoldierCount = data.soldiersCount;
-        data.soldiersCount += (int)(clickCount * SoldierBooster.SoldierModifier * UI.Instance.sliderModifier.value);
+        data.soldiersCount += (int)(clickCount * SoldierBooster.SoldierModifier * Mathf.Floor(UI.Instance.sliderModifier.value));
         if (data.soldiersCount <= 0 && lastSoldierCount < 0) data.soldiersCount = 0;
         else if (data.soldiersCount <= 0 && lastSoldierCount > 0) data.soldiersCount = int.MaxValue;
     }

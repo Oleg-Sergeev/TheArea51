@@ -16,8 +16,8 @@ public class UI : MonoBehaviour
         prestigeClickBonus, prestigeAutoclickerBonus, prestigeOfflineClickerBonus, prClicker, prAutoclicker, prOfflineClicker,
         activePanelText, activeSection, prestige, prestigeLvl, gameVersion, debugLng;
     public Text[] localizedTexts;
-    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, prestigeBttn, passwordInput, speedUp;
-    public GameObject[] panelsArr, tutorials;
+    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, prestigeBttn, passwordInput;
+    public GameObject[] panelsArr, tutorials, modifiers;
     private static Dictionary<string, ClickerItem<Clicker>> clickItems;
     private static Dictionary<string, BoosterItem<Booster>> boosterItems;
     private static Dictionary<string, GameObject> panels;
@@ -56,10 +56,6 @@ public class UI : MonoBehaviour
         gameVersion.text = $"v{Application.version}";
 
         prestigeLvl.text = GameDataManager.data.prestigeLvl.ToString();
-        
-        sliderModifier.minValue = 1;
-        sliderModifier.value = 1;
-        sliderModifier.maxValue = 5;
         #endregion
         
         prestigeBttn.SetActive(false);
@@ -109,6 +105,12 @@ public class UI : MonoBehaviour
             InitializeBoosterInfo(new BoosterItem<Booster>(i.uiInfo, i.Booster), boosterItems);
             if (i.Booster.IsUsing) i.Booster.Use();
         }
+        foreach (var i in ShopManager.Instance.soldierBoosters)
+        {
+            i.Booster = InitializeBooster(i.Booster);
+            InitializeBoosterInfo(new BoosterItem<Booster>(i.uiInfo, i.Booster), boosterItems);
+            if (i.Booster.IsUsing) i.Booster.Use();
+        }
 
         if (GameDataManager.data.debugEnabled)
         {
@@ -120,6 +122,7 @@ public class UI : MonoBehaviour
         else
         {
             foreach (var i in tutorials) Destroy(i);
+            Destroy(intro);
             InvokeRepeating("NextDay", calendarDay, calendarDay);
         }
 
@@ -152,6 +155,7 @@ public class UI : MonoBehaviour
         FPS(GameDataManager.data.fps);
 
         OnChangeText();
+
 
         T InitializeClicker<T>(T clicker) where T : Clicker
         {
@@ -237,6 +241,7 @@ public class UI : MonoBehaviour
 
             if (booster.priceDefault != savedBooster.priceDefault) savedBooster.priceDefault = booster.priceDefault;
             if (booster.currency != savedBooster.currency) savedBooster.currency = booster.currency;
+            if (booster.abilityModifier != savedBooster.abilityModifier) savedBooster.abilityModifier = booster.abilityModifier;
             if (booster.useTime != savedBooster.useTime)
             {
                 savedBooster.useTime = booster.useTime;
@@ -485,14 +490,8 @@ public class UI : MonoBehaviour
         activeSection.color = Color.green;
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F)) IncreaseSpeed();
-        if (Input.GetKeyDown(KeyCode.G)) IncreaseSpeed();
-    }
-
     #region Modifier
-    private float speed = 0, speedLimit = 0.002f, timer = 0.25f;
+    private float speed = 0, speedLimit = 0.0025f, timer = 0.2f;
 
     public void OnChangeValue()
     {
@@ -502,9 +501,9 @@ public class UI : MonoBehaviour
     float deltaClickTime = 0;
     private void IncreaseSpeed()
     {
-        timer = 0.25f * (1 / sliderModifier.value * 2);
-        if (0.25f * (float)Math.Pow(0.7f, Math.Floor(sliderModifier.value) - 1) >= deltaClickTime) deltaClickTime = 0;
-        if (speed <= speedLimit) speed += (0.25f * (float)Math.Pow(0.7f,Math.Floor(sliderModifier.value) - 1) - deltaClickTime) * speedLimit;
+        timer = 0.2f * (1 / sliderModifier.value * 2);
+        if (0.25f * (float)Math.Pow(0.55f, Math.Floor(sliderModifier.value) - 1) <= deltaClickTime) deltaClickTime = 0;
+        if (speed <= speedLimit + (1 / sliderModifier.value * speedLimit)) speed += ((0.25f * (float)Math.Pow(0.55f,Math.Floor(sliderModifier.value) - 1)) - deltaClickTime) * speedLimit;
 
         deltaClickTime = 0;
         ChangeValue();
@@ -734,7 +733,16 @@ public class UI : MonoBehaviour
 
         boosterItem.uiInfo.bttnUse.interactable = hasEnded && boosterItem.Booster.amount > 0;
 
-        speedUp.SetActive(!hasEnded);
+        if (boosterItem.Booster is TimeBooster)
+        {
+            modifiers[0].SetActive(!hasEnded);
+            modifiers[0].transform.GetChild(0).GetComponent<Text>().text = $"{boosterItem.Booster.abilityModifier}x";
+        }
+        else if (boosterItem.Booster is SoldierBooster)
+        {
+            modifiers[1].SetActive(!hasEnded);
+            modifiers[1].transform.GetChild(0).GetComponent<Text>().text = $"{boosterItem.Booster.abilityModifier}x";
+        }
 
         boosterItem.uiInfo.amount.text = $"{boosterItem.Booster.amount}x";
     }
@@ -802,7 +810,7 @@ public class UI : MonoBehaviour
                     {
                         BoosterItem<Booster> boosterItem = boosterItems[booster.name];
 
-                        boosterItem.uiInfo.amount.text = booster.amount.ToString();
+                        boosterItem.uiInfo.amount.text = $"{booster.amount}x";
                         boosterItem.uiInfo.price.text = FormatMoney(booster.priceDefault);
                     }
                     else MyDebug.LogWarning($"Product {name.name} not found");
@@ -840,6 +848,19 @@ public class UI : MonoBehaviour
         }
 
         timeBooster.Use();
+    }
+
+    public void IncreaseSoldiers(Text name)
+    {
+        SoldierBooster soldierBooster = GetProduct<SoldierBooster>(name.name);
+
+        if (soldierBooster == null)
+        {
+            MyDebug.LogError($"soldier booster {name.name} not found");
+            return;
+        }
+
+        soldierBooster.Use();
     }
 
     #endregion

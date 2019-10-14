@@ -90,9 +90,9 @@ public class ShopManager : MonoBehaviour
             if (!data.boosters.ContainsKey(booster.name)) data.boosters.Add(booster.name, booster);
         }
 
-        SaveManager.Save(data);
-
         success(true);
+
+        SaveManager.Save(data);
     }
 }
 
@@ -209,7 +209,7 @@ public enum Currency
 
         while (hasStart)
         {
-            await System.Threading.Tasks.Task.Delay((int)(1000 / Time.timeScale));
+            await System.Threading.Tasks.Task.Delay((int)(1000 / (Time.timeScale + 0.001f)));
 
             if (EventManager.eventManager != null && hasStart)
             {
@@ -332,7 +332,7 @@ public enum Currency
 [Serializable] public abstract class Booster : Product
 {
     public bool IsUsing { get; protected set; }
-    public int useTime;
+    public int useTime, abilityModifier;
     [HideInInspector] public int amount, useTimeRemained;
 
     public abstract void Use();
@@ -340,8 +340,6 @@ public enum Currency
 
 [Serializable] public class TimeBooster : Booster
 {
-    public int timeScaleAdder;
-
     public override async void Use()
     {
         if (!IsUsing)
@@ -355,7 +353,7 @@ public enum Currency
 
         IsUsing = true;
 
-        Time.timeScale += timeScaleAdder;
+        Time.timeScale *= abilityModifier;
 
         while (useTimeRemained > 0)
         {
@@ -363,7 +361,7 @@ public enum Currency
             await System.Threading.Tasks.Task.Delay(1000);
         }
 
-        Time.timeScale -= timeScaleAdder;
+        Time.timeScale /= abilityModifier;
 
         IsUsing = false;
 
@@ -376,7 +374,6 @@ public enum Currency
 [Serializable] public class SoldierBooster : Booster
 {
     public static int SoldierModifier { get; set; } = 1;
-    public int soldiersModifier;
 
     public async override void Use()
     {
@@ -391,7 +388,7 @@ public enum Currency
 
         IsUsing = true;
 
-        SoldierModifier += soldiersModifier;
+        SoldierModifier *= abilityModifier;
 
         while (useTimeRemained > 0)
         {
@@ -399,7 +396,7 @@ public enum Currency
             await System.Threading.Tasks.Task.Delay(1000);
         }
 
-        SoldierModifier -= soldiersModifier;
+        SoldierModifier /= abilityModifier;
 
         IsUsing = false;
 
