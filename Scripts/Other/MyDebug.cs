@@ -5,14 +5,11 @@ using UnityEngine.UI;
 
 public class MyDebug : MonoBehaviour
 {
-    private static MyDebug Instance;
     private static Queue<Message> messages;
     private static Text[] texts;
 
     private void Awake()
     {
-        Instance = this;
-
         Initialize();
     }
 
@@ -55,7 +52,7 @@ public class MyDebug : MonoBehaviour
             Debug.LogError(message);
         }
     }
-
+    
     private static void AddMessage(Color color, object message)
     {
         if (messages == null) Initialize();
@@ -73,24 +70,13 @@ public class MyDebug : MonoBehaviour
             texts[i].text = tempArr[j].text;
         }
 
-        //DeleteMessage();
+        DeleteMessage(2);
     }
 
-    private async static void DeleteMessage()
+    private async static void DeleteMessage(int deleteTime)
     {
-        Debug.Log("Enter method");
-        float timer = 7;
-        await Task.Run(() =>
-        {
-            Debug.Log("Starting task");
-            while (timer > 0)
-            {
-                timer -= 0.02f;
-                Debug.Log(timer);
-            }
-            Debug.Log("Finishing task");
-        });
-        Debug.Log("Continue method");
+        await Task.Delay(deleteTime * 1000);
+
         if (messages.Count > 0)
         {
             if (messages.Count == 1)
@@ -119,5 +105,11 @@ public class MyDebug : MonoBehaviour
             this.color = color;
             text = message?.ToString() ?? "null";
         }
+
+        public static bool operator == (Message m1, Message m2) => m1.text == m2.text && m1.color == m2.color;
+        public static bool operator != (Message m1, Message m2) => m1.text != m2.text || m1.color != m2.color;
+
+        public override bool Equals(object obj) => base.Equals(obj);
+        public override int GetHashCode() => base.GetHashCode();
     }
 }

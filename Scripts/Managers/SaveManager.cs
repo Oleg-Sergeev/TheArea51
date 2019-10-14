@@ -34,19 +34,11 @@ public static class SaveManager
                 File.Delete(savePath + ".meta");
             }
         }
-        catch (System.Exception e)
-        {
-            string logPath = generalPath + "/Log.txt";
-
-            string lastLogs = "";
-            string currentLog = $"*** Error: {e.StackTrace} /// {e.Message} ***";
-
-            MyDebug.LogError(currentLog);
-
-            if (File.Exists(logPath)) lastLogs = File.ReadAllText(logPath);
-
-            File.WriteAllText(logPath, $"{lastLogs}\n{currentLog}");
-        }
+        catch (System.InvalidOperationException e) { throw new InvalidSaveOperationException(2, e); }
+        catch (System.ArgumentNullException e) { throw new InvalidSaveOperationException(3, e); }
+        catch (System.UnauthorizedAccessException e) { throw new InvalidSaveOperationException(4, e); }
+        catch (System.NullReferenceException e) { throw new InvalidSaveOperationException(5, e); }
+        catch (System.Exception e) { throw new InvalidSaveOperationException(1, e); }
     }
 
     public static GameData Load()
@@ -73,16 +65,10 @@ public static class SaveManager
                 return data;
             }
         }
-        catch (System.Exception e)
-        {
-            string logPath = generalPath + "/Log.txt";
-
-            string lastLogs = "";
-            MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
-            if (File.Exists(logPath)) lastLogs = File.ReadAllText(logPath);
-            File.WriteAllText(logPath, $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
-
-            return null;
-        }
+        catch (System.InvalidOperationException e) { throw new InvalidSaveOperationException(2, e); }
+        catch (System.ArgumentNullException e) { throw new InvalidSaveOperationException(3, e); }
+        catch (System.UnauthorizedAccessException e) { throw new InvalidSaveOperationException(4, e); }
+        catch (System.NullReferenceException e) { throw new InvalidSaveOperationException(5, e); }
+        catch (System.Exception e) { throw new InvalidSaveOperationException(1, e); }
     }
 }

@@ -1,0 +1,468 @@
+﻿{
+    "items": [
+        {
+            "key": "null",
+            "value": "null"
+        },
+        {
+            "key": "Introducing",
+            "value": "June 27, 2019.\nOn this day, people plan to storm Area 51. Their storm is scheduled for September 20, 2019.\nYou are the Commander-in-Chief of Area 51, and your goal is to repel the September 20 attack. To make you understand the seriousness of the situation, the scheme of attack on the Area is presented below. Fearing, isn't it? Add to this Minecraft lovers who can just drop your TNT base, or call the Wither, and you will realize how important the protection of this area is ..."
+        },
+        {
+            "key": "ReadyToDefend",
+            "value": "Ready to defend Area 51!"
+        },
+        {
+            "key": "ClickPower",
+            "value": "Click power"
+        },
+        {
+            "key": "ClickPowerD",
+            "value": "Simple click enhancer, nothing out of the ordinary"
+        },
+        {
+            "key": "DoubleClicker",
+            "value": "Double clicker"
+        },
+        {
+            "key": "DoubleClickerD",
+            "value": "One clicker - one click, two clickers - two clicks. Math and no magic"
+        },
+        {
+            "key": "TitaniumClicker",
+            "value": "Titanium clicker"
+        },
+        {
+            "key": "TitaniumClickerD",
+            "value": "Titanium clicker allows you to do work 4 times more effective"
+        },
+        {
+            "key": "Soldier",
+            "value": "Soldier"
+        },
+        {
+            "key": "SoldierD",
+            "value": "He patrols the zone and recruits lost people"
+        },
+        {
+            "key": "Paratrooper",
+            "value": "Paratrooper"
+        },
+        {
+            "key": "ParatrooperD",
+            "value": "He can easily gets on any roof. Many years of experience in PUBG makes itself felt"
+        },
+        {
+            "key": "I.V.A.N",
+            "value": "I.V.A.N"
+        },
+        {
+            "key": "I.V.A.ND",
+            "value": "How his name is deciphered is a mystery, but who cares, when this terminator erases anyone in powder"
+        },
+        {
+            "key": "AirDefense",
+            "value": "Air defense"
+        },
+        {
+            "key": "AirDefenseD",
+            "value": "Protective structure, knocking down balloons with rock-throwers"
+        },
+        {
+            "key": "Turret",
+            "value": "Turret"
+        },
+        {
+            "key": "TurretD",
+            "value": "At the sight of a turret, most naruto runners decide to surrender to the Americans"
+        },
+        {
+            "key": "UFOShip",
+            "value": "UFO ship"
+        },
+        {
+            "key": "UFOShipD",
+            "value": "This ship is not dangerous, on the contrary - when it is seen, people are recruited into soldiers to see this colossus closer"
+        },
+        {
+            "key": "HumanRobot",
+            "value": "Human-robot"
+        },
+        {
+            "key": "HumanRobotD",
+            "value": "This is the first successful experiment by scientists to create cyborgs. This instance turned out to be stupid, but it can fulfill the function of protecting the homeland"
+        },
+        {
+            "key": "SmallRobotFactory",
+            "value": "Small robot factory"
+        },
+        {
+            "key": "SmallRobotFactoryD",
+            "value": "This shed is developing robot-assistants"
+        },
+        {
+            "key": "MediumRobotFactory",
+            "value": "Medium robot factory"
+        },
+        {
+            "key": "MediumRobotFactoryD",
+            "value": "Terrifying robot-killers are ready to stick their dagger, you just have to give them a command..."
+        },
+        {
+            "key": "LargeRobotFactory",
+            "value": "Large robot factory"
+        },
+        {
+            "key": "LargeRobotFactoryD",
+            "value": "A whole army of robot-killers is creating at this giant factory."
+        },
+        {
+            "key": "SunflowerPlantation",
+            "value": "Sunflower plantation"
+        },
+        {
+            "key": "SunflowerPlantationD",
+            "value": "These sunflowers energize the entire Zone likes the flowers from \"Blanps vs Momties \""
+        },
+        {
+            "key": "AliensLab",
+            "value": "Aliens lab"
+        },
+        {
+            "key": "AliensLabD",
+            "value": "Countless experiments on aliens have borne fruit - people have learned to create copies of aliens"
+        },
+        {
+            "key": "Teleportator",
+            "value": "Teleportator"
+        },
+        {
+            "key": "TeleportatorD",
+            "value": "We configure the filter, press the button - the necessary people are moved to the base"
+        },
+        {
+            "key": "PeopleGenerator",
+            "value": "People generator"
+        },
+        {
+            "key": "PeopleGeneratorD",
+            "value": "Scientists parted in earnest: they began to create people as if it were a common thing"
+        },
+        {
+            "key": "Watchtower",
+            "value": "Watchtower"
+        },
+        {
+            "key": "WatchtowerD",
+            "value": "The watchtower is always on the alert, even if the commander-in-chief is not online"
+        },
+        {
+            "key": "SatelliteDish",
+            "value": "Satellite"
+        },
+        {
+            "key": "SatelliteDishD",
+            "value": "With its help, our scientists establish contact with other life forms. So that no one finds out about this, all actions take place at night"
+        },
+        {
+            "key": "DamagedGodClicker",
+            "value": "Damaged divine clicker"
+        },
+        {
+            "key": "DamagedGodClickerD",
+            "value": "Scientists from Area 51 decided to inject the power of a robot and a human into a titanium clicker, hoping to get something divine. They did this, but due to serious damage during the synthesis, the resulting clicker can only work at night."
+        },
+        {
+            "key": "NonPoweredGodClicker",
+            "value": "Non powered divine clicker"
+        },
+        {
+            "key": "NonPoweredGodClickerD",
+            "value": "The second attempt by scientists to create a divine clicker ended much better: they added an alien heart to this clicker, which helped stabilize the clicker. But scientists will not stop there ..."
+        },
+        {
+            "key": "PoweredGodClicker",
+            "value": "Powered divine clicker"
+        },
+        {
+            "key": "PoweredGodClickerD",
+            "value": "After studying the received divine clicker, scientists risked charging it with an alien power. They quickly found the alien's heart, and with the help of thermonuclear fusion, scientists were able to charge divine clicker, which allows you to use all its power!"
+        },
+        {
+            "key": "TimeAccelerator",
+            "value": "Time accelerator"
+        },
+        {
+            "key": "TimeAcceleratorD",
+            "value": "With the advent of gravitational space curvatures, time acceleration in 2 times for 5 minutes is now available to you. Back this thing is not yet able to work"
+        },
+        {
+            "key": "AdvancedTimeAccelerator",
+            "value": "Advanced time accelerator"
+        },
+        {
+            "key": "AdvancedTimeAcceleratorD",
+            "value": "Scientists decided to improve the time accelerator by adding a pair of crystals created from alien tissues. Surprisingly, this gave a significant increase in the power of the time accelerator and now you can increase time in 4 times for 10 minutes"
+        },
+        {
+            "key": "MolecularDoubler",
+            "value": "Molecular doubler"
+        },
+        {
+            "key": "MolecularDoublerD",
+            "value": "Creating a human clone is a rather long task, so scientists decided to create a doubler of molecules. With its help, DNA is cloned and the creation of a clone begins immediately."
+        },
+
+
+        {
+            "key": "Soldiers",
+            "value": "Soldiers"
+        },
+        {
+            "key": "Calendar",
+            "value": "Calendar"
+        },
+        {
+            "key": "ClickerBonuses",
+            "value": "Clicker bonuses"
+        },
+        {
+            "key": "TutorialGame_1",
+            "value": "Greetings! This tutorial will help you quickly understand the principles of the game. The most basic action here is buying clickers, so let's get down to it soon. Click the Shop button in the lower right."
+        },
+        {
+            "key": "TutorialGame_2",
+            "value": "When you’re ready to start defending Area 51 - click on the button"
+        },
+        {
+            "key": "TutorialShop_1",
+            "value": "Here are the clickers that you can buy. There are 3 types of clickers: manual, auto and offline. From their names it’s clear how they work. Let's buy the first clicker. Click on highlighted clicker."
+        },
+        {
+            "key": "TutorialShop_2",
+            "value": "Great, now you can close the Shop and finish your tutorial."
+        },
+        {
+            "key": "DefendArea51",
+            "value": "Start defending Area 51"
+        },
+        {
+            "key": "TouchToContinue",
+            "value": "Touch to continue"
+        },
+        {
+            "key": "Offline",
+            "value": "Offline"
+        },
+        {
+            "key": "ManualClickers",
+            "value": "Manual clickers"
+        },
+        {
+            "key": "Autoclickers",
+            "value": "Autoclickers"
+        },
+        {
+            "key": "OfflineClickers",
+            "value": "Offline clickers"
+        },
+        {
+            "key": "PrestigeBonus",
+            "value": "Prestige bonus"
+        },
+        {
+            "key": "Click",
+            "value": "click"
+        },
+        {
+            "key": "Sec",
+            "value": "sec"
+        },
+        {
+            "key": "Level",
+            "value": "Level"
+        },
+        {
+            "key": "Buy",
+            "value": "Buy"
+        },
+        {
+            "key": "Auto",
+            "value": "Auto"
+        },
+        {
+            "key": "Off_",
+            "value": "Off"
+        },
+        {
+            "key": "Upgrade",
+            "value": "Upgrade"
+        },
+        {
+            "key": "Area51",
+            "value": "Area 51"
+        },
+        {
+            "key": "Shop",
+            "value": "SHOP"
+        },
+        {
+            "key": "More",
+            "value": "MORE"
+        },
+        {
+            "key": "Notes",
+            "value": "NOTES"
+        },
+        {
+            "key": "Settings",
+            "value": "Settings"
+        },
+        {
+            "key": "Language",
+            "value": "Language"
+        },
+        {
+            "key": "Sfx",
+            "value": "Sounds"
+        },
+        {
+            "key": "Fps",
+            "value": "Fps"
+        },
+        {
+            "key": "Off",
+            "value": "Off"
+        },
+        {
+            "key": "On",
+            "value": "On"
+        },
+        {
+            "key": "BeforeStorm",
+            "value": "Hordes of assaults are already visible. Naruto runners knead their legs and arms, rock throwers fill their balloons with hot air, and minecrafters charge their big TNT cannon. And in a matter of seconds, the greatest battle of 2019 will begin. Commander, get ready! Now you will defend your territory with all your strength. No one knows how long the assault will last, so you must defend Area 51 at all costs. Get ready for defense!"
+        },
+        {
+            "key": "WinText",
+            "value": "You were able to contain the onslaught of the strongest army in 2019! Your excellent commander skills have made themselves felt, and now you are the most talked about person in all the media. But you can not relax, because the assault will again replenish their ranks with new, more powerful fighters. The next battle will be much tougher than last. You have a choice: to remain commander in chief and prepare Area 51 for the next defense, or to resign and enjoy life peacefully. It is worth noting that you can return to the commander’s chair at any time and lead the defense of the Area. The choice is yours..."
+        },
+        {
+            "key": "DefeatText",
+            "value": "In this furious battle, not for life, but to death, despite all possible attempts to protect Area 51 from the invasion of hostile troops, our army was defeated and the surviving crowd of assaults penetrated the forbidden territory and revealed all the secrets of this place. 70% of the US Army was sent to the base to defend the facility. The government wanted to remove you from the post of commander in chief, but the remaining leadership of Area 51 convinced the government to leave you at your post, but on one condition: you are obliged to recruit at least 1,000,000 soldiers as soon as possible so that the base has minimal protection against attack. What are you waiting for? Go ahead for new soldiers!"
+        },
+        {
+            "key": "GetPrestige",
+            "value": "Commander, I knew you would be back here. Well, are you ready to once again take command of Area 51 and increase your prestige?"
+        },
+        {
+            "key": "Prestige",
+            "value": "Prestige"
+        },
+        {
+            "key": "Apply",
+            "value": "Apply"
+        },
+        {
+            "key": "Revert",
+            "value": "Revert"
+        },
+        {
+            "key": "ApplyPrestige",
+            "value": "Apply prestige"
+        },
+        {
+            "key": "RevertPrestige",
+            "value": "Revert prestige"
+        },
+
+        {
+            "key": "SectionClickers",
+            "value": "Manual clickers"
+        },
+        {
+            "key": "SectionAutoClickers",
+            "value": "Autoclickers"
+        },
+        {
+            "key": "SectionOfflineClickers",
+            "value": "Offline clickers"
+        },
+        {
+            "key": "SectionUniversalClickers",
+            "value": "Universal clickers"
+        },
+        {
+            "key": "SectionTimeBoosters",
+            "value": "Time boosters"
+        },
+        {
+            "key": "SectionSoldierBoosters",
+            "value": "Soldier boosters"
+        },
+        {
+            "key": "Clickers",
+            "value": "Clickers"
+        },
+        {
+            "key": "Warriors",
+            "value": "Warriors"
+        },
+        {
+            "key": "Boosters",
+            "value": "Boosters"
+        },
+        {
+            "key": "Special",
+            "value": "Special"
+        },
+
+        {
+            "key": "Jan",
+            "value": "January"
+        },
+        {
+            "key": "Feb",
+            "value": "February"
+        },
+        {
+            "key": "Mar",
+            "value": "March"
+        },
+        {
+            "key": "Apr",
+            "value": "April"
+        },
+        {
+            "key": "May",
+            "value": "May"
+        },
+        {
+            "key": "June",
+            "value": "June"
+        },
+        {
+            "key": "July",
+            "value": "July"
+        },
+        {
+            "key": "Aug",
+            "value": "August"
+        },
+        {
+            "key": "Sept",
+            "value": "September"
+        },
+        {
+            "key": "Oct",
+            "value": "October"
+        },
+        {
+            "key": "Nov",
+            "value": "November"
+        },
+        {
+            "key": "Dec",
+            "value": "December"
+        }
+    ]
+}

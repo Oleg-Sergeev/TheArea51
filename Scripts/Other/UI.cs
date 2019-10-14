@@ -345,7 +345,6 @@ public class UI : MonoBehaviour
     {
         if (!GameDataManager.data.wasAttack && calendar.number.text == "20" && calendar.month.text == LanguageManager.GetLocalizedText("Sept"))
         {
-            Debug.Log("Storm");
             if (!GameDataManager.data.isDefend)
             {
                 beforeStorm.SetActive(true);

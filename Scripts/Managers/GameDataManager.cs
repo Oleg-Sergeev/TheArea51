@@ -8,63 +8,53 @@ public class GameDataManager : MonoBehaviour
 
     private async void Awake()
     {
-        try
+        Time.timeScale = 1;
+
+        if ((data = SaveManager.Load()) == null)
         {
-            Time.timeScale = 1;
+            data = new GameData();
+        }
 
-            if ((data = SaveManager.Load()) == null)
-            {
-                data = new GameData();
-            }
+        EventManager.eventManager = new EventManager();
 
-            EventManager.eventManager = new EventManager();
+        EventManager.eventManager.OnClick += OnClick;
 
-            EventManager.eventManager.OnClick += OnClick;
+        CheckForNull(data);
 
-            CheckForNull(data);
+        StartCoroutine(Save());
 
-            StartCoroutine(Save());
-
-            if (data.clickers.Count != data.clickersCount)
-            {
-                Debug.LogWarning($"Clickers count ({data.clickers.Count}) != data clickers count ({data.clickersCount})");
-                data.hasChangedSaveStructure = true;
-                data.clickersCount = 0;
-                data.clickBonus = 0;
-                data.autoClickerBonus = 0;
-                data.offlineClickBonus = 0;
-                foreach (var cl in data.clickers)
-                {
-                    if (cl.Value is ManualClicker clicker) data.clickBonus += clicker.allClickPower;
-                    else if (cl.Value is AutoClicker aclicker) data.autoClickerBonus += aclicker.allClickPower;
-                    else if (cl.Value is OfflineClicker oclicker) data.offlineClickBonus += oclicker.allClickPower;
-                    else
-                    {
-                        UniversalClicker uclicker = cl.Value as UniversalClicker;
-                        data.clickBonus += uclicker.allClickPower;
-                        data.autoClickerBonus += uclicker.allClickPower * 5;
-                        data.offlineClickBonus += uclicker.allClickPower * 2;
-                    }
-                    data.clickersCount++;
-                }
-            }
-
+        if (data.clickers.Count != data.clickersCount)
+        {
+            Debug.LogWarning($"Clickers count ({data.clickers.Count}) != data clickers count ({data.clickersCount})");
+            data.hasChangedSaveStructure = true;
+            data.clickersCount = 0;
+            data.clickBonus = 0;
+            data.autoClickerBonus = 0;
+            data.offlineClickBonus = 0;
             foreach (var cl in data.clickers)
             {
-                IAutocliker autoClicker = cl.Value as IAutocliker;
-                autoClicker?.AutoClick();
-
-                await System.Threading.Tasks.Task.Delay(Random.Range(400, 600));
+                if (cl.Value is ManualClicker clicker) data.clickBonus += clicker.allClickPower;
+                else if (cl.Value is AutoClicker aclicker) data.autoClickerBonus += aclicker.allClickPower;
+                else if (cl.Value is OfflineClicker oclicker) data.offlineClickBonus += oclicker.allClickPower;
+                else
+                {
+                    UniversalClicker uclicker = cl.Value as UniversalClicker;
+                    data.clickBonus += uclicker.allClickPower;
+                    data.autoClickerBonus += uclicker.allClickPower * 5;
+                    data.offlineClickBonus += uclicker.allClickPower * 2;
+                }
+                data.clickersCount++;
             }
         }
-        catch (System.Exception e)
+
+        foreach (var cl in data?.clickers)
         {
-            string logPath = Application.dataPath + "/Log.txt";
-            string lastLogs = "";
-            MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
-            if (System.IO.File.Exists(logPath)) lastLogs = System.IO.File.ReadAllText(logPath);
-            System.IO.File.WriteAllText(Application.dataPath + "/Log.txt", $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
+            IAutocliker autoClicker = cl.Value as IAutocliker;
+            autoClicker?.AutoClick();
+
+            await System.Threading.Tasks.Task.Delay(Random.Range(400, 600));
         }
+
 
         void CheckForNull(GameData data)
         {
@@ -136,34 +126,23 @@ public class GameDataManager : MonoBehaviour
 
     private void OnApplicationFocus(bool focus)
     {
-        try
+        if (!focus)
         {
-            if (!focus)
+            foreach (var ocl in data?.clickers ?? null)
             {
-                foreach (var ocl in data.clickers)
-                {
-                    IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
-                    offlineClicker?.RememberTime();
-                }
+                IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
+                offlineClicker?.RememberTime();
             }
-            else
+        }
+        else
+        {
+            foreach (var ocl in data?.clickers ?? null)
             {
-                foreach (var ocl in data.clickers)
-                {
-                    IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
-                    offlineClicker?.CalculateProduction();
-                }
+                IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
+                offlineClicker?.CalculateProduction();
             }
+        }
 
-            SaveManager.Save(data);
-        }
-        catch (System.Exception e)
-        {
-            string logPath = Application.dataPath + "/Log.txt";
-            string lastLogs = "";
-            MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
-            if (System.IO.File.Exists(logPath)) lastLogs = System.IO.File.ReadAllText(logPath);
-            System.IO.File.WriteAllText(Application.dataPath + "/Log.txt", $"{lastLogs}\n***Error: {e.StackTrace} /// {e.Message} ***");
-        }
+        SaveManager.Save(data);
     }
 }
