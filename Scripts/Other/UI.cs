@@ -7,10 +7,10 @@ public class UI : MonoBehaviour
 {
     public static UI Instance;
     public Calendar calendar;
-    public RectTransform rect, debugClickerMenu;
+    public RectTransform langArrow, debugClickerMenu, scale;
     public RectTransform[] descriptions;
     public Sprite[] langSpritesArr;
-    public Image currentLanguage, toggleSFX, buttonSFX, sliderFPS, sliderModifierColor, activePanelPointer, area51HpImage;
+    public Image currentLanguage, toggleSFX, buttonSFX, buttonScale, toggleScale, sliderFPS, sliderModifierColor, activePanelPointer, area51HpImage;
     public Slider sliderModifier, area51Hp;
     public Text soldiers, soldiersFull, aliensHearts, aliensHeartsFull, textOfflineClickerBonus, textAutoclickerBonus, textClickBonus,
         prestigeClickBonus, prestigeAutoclickerBonus, prestigeOfflineClickerBonus, prClicker, prAutoclicker, prOfflineClicker,
@@ -24,7 +24,6 @@ public class UI : MonoBehaviour
     private static Dictionary<string, Sprite> langSprites;
     private static readonly string[] languages = { "ru", "en" };
     private const string PASSWORD = "ZgTA51OV199";
-    private float calendarDay = 60;
 
 
     private void Awake() => Instance = this;
@@ -57,7 +56,7 @@ public class UI : MonoBehaviour
 
         prestigeLvl.text = GameDataManager.data.prestigeLvl.ToString();
         #endregion
-        
+
         prestigeBttn.SetActive(false);
 
         foreach (var i in langSpritesArr)
@@ -123,7 +122,7 @@ public class UI : MonoBehaviour
         {
             foreach (var i in tutorials) Destroy(i);
             Destroy(intro);
-            InvokeRepeating("NextDay", calendarDay, calendarDay);
+            InvokeRepeating("NextDay", (float)GameDataManager.data.dayStep, (float)GameDataManager.data.dayStep);
         }
 
         if (GameDataManager.data.isDefend)
@@ -152,6 +151,7 @@ public class UI : MonoBehaviour
         }
 
         SFX(true);
+        InverseScale(true);
         FPS(GameDataManager.data.fps);
 
         OnChangeText();
@@ -286,8 +286,12 @@ public class UI : MonoBehaviour
         {
             var booster = boosterItem.Booster;
 
+            string key = booster is TimeBooster ? "TimeBoost" : "SoldierBoost";
+
             InitializeShopInfo(boosterItem.uiInfo);
             boosterItem.uiInfo.amount = boosterItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
+            boosterItem.uiInfo.use = boosterItem.uiInfo.uiObject.GetChild(5).GetChild(1).GetComponent<Text>();
+            boosterItem.uiInfo.functional = boosterItem.uiInfo.uiObject.GetChild(5).GetChild(2).GetComponent<Text>();
             boosterItem.uiInfo.bttnUse = boosterItem.uiInfo.uiObject.GetChild(5).GetComponent<Button>();
 
             boosterItems.Add(booster.name, boosterItem);
@@ -297,6 +301,8 @@ public class UI : MonoBehaviour
             boosterItems[booster.name].uiInfo.avatarImage.sprite = boosterItem.uiInfo.avatar;
             boosterItems[booster.name].uiInfo.name.text = LanguageManager.GetLocalizedText(boosterItem.uiInfo.name.name);
             boosterItems[booster.name].uiInfo.amount.text = $"{booster.amount}x";
+            boosterItems[booster.name].uiInfo.functional.text = $"{LanguageManager.GetLocalizedText(key)} {booster.abilityModifier}x - {booster.useTime}{LanguageManager.GetLocalizedText("Sec")}";
+            boosterItems[booster.name].uiInfo.use.text = LanguageManager.GetLocalizedText("Use");
             boosterItems[booster.name].uiInfo.price.text = booster.priceDefault.ToString();
             boosterItems[booster.name].uiInfo.currency.sprite = Resources.Load<Sprite>(boosterItems[booster.name].Booster.currency.ToString());
         }
@@ -424,7 +430,7 @@ public class UI : MonoBehaviour
 
         string SplitUp() => $"{money:# ### ### ###}";
     }
-    
+
     private GameObject closingPanel;
     private void OpenOrClosePanel(string name, Text text)
     {
@@ -444,7 +450,7 @@ public class UI : MonoBehaviour
                 if (panels["LangSelect"].activeSelf)
                 {
                     MoveToStartPos("LangSelect", default, OnClose);
-                    rect.rotation = Quaternion.Euler(0, 0, 0);
+                    langArrow.rotation = Quaternion.Euler(0, 0, 0);
                 }
             }
             else activePanelPointer.color = Color.green;
@@ -473,7 +479,7 @@ public class UI : MonoBehaviour
             if (panels["LangSelect"].activeSelf)
             {
                 MoveToStartPos("LangSelect", default, OnClose);
-                rect.rotation = Quaternion.Euler(0, 0, 0);
+                langArrow.rotation = Quaternion.Euler(0, 0, 0);
             }
         }
     }
@@ -502,7 +508,7 @@ public class UI : MonoBehaviour
     {
         timer = 0.2f * (1 / sliderModifier.value * 2);
         if (0.25f * (float)Math.Pow(0.55f, Math.Floor(sliderModifier.value) - 1) <= deltaClickTime) deltaClickTime = 0;
-        if (speed <= speedLimit + (1 / sliderModifier.value * speedLimit)) speed += ((0.25f * (float)Math.Pow(0.55f,Math.Floor(sliderModifier.value) - 1)) - deltaClickTime) * speedLimit;
+        if (speed <= speedLimit + (1 / sliderModifier.value * speedLimit)) speed += ((0.25f * (float)Math.Pow(0.55f, Math.Floor(sliderModifier.value) - 1)) - deltaClickTime) * speedLimit;
 
         deltaClickTime = 0;
         ChangeValue();
@@ -524,7 +530,7 @@ public class UI : MonoBehaviour
                 else speed = -speedLimit * sliderModifier.value;
             }
             sliderModifier.value += speed;
-            
+
 
             deltaClickTime += Time.unscaledDeltaTime;
             await System.Threading.Tasks.Task.Yield();
@@ -601,7 +607,7 @@ public class UI : MonoBehaviour
 
         GameDataManager.data.wasTutorial = true;
 
-        InvokeRepeating("NextDay", calendarDay, calendarDay);
+        InvokeRepeating("NextDay", (float)GameDataManager.data.dayStep, (float)GameDataManager.data.dayStep);
     }
 
     #endregion /Tutorial
@@ -675,7 +681,7 @@ public class UI : MonoBehaviour
                 }
             }
         }
-        
+
         void CheckPossibillityToUse(Booster booster)
         {
             BoosterShopItem shopItem = boosterItems[booster.name].uiInfo;
@@ -715,7 +721,7 @@ public class UI : MonoBehaviour
 
         panels["Prestige"].SetActive(true);
 
-        InvokeRepeating("NextDay", calendarDay, calendarDay);
+        InvokeRepeating("NextDay", (float)GameDataManager.data.dayStep, (float)GameDataManager.data.dayStep);
 
         Time.timeScale = 0;
     }
@@ -868,6 +874,8 @@ public class UI : MonoBehaviour
 
     #region More
 
+    #region Settings
+
     public void SFX(string name) => SFXManager.PlaySound(name);
 
     public void SFX(bool isStart = false)
@@ -884,6 +892,34 @@ public class UI : MonoBehaviour
         {
             buttonSFX.color = new Color(0.75f, 0, 0);
             toggleSFX.rectTransform.anchoredPosition = new Vector2(0, 0);
+        }
+    }
+
+    public void InverseScale(bool isStart = false)
+    {
+        bool inverseScale = GameDataManager.data.inversedScale;
+        if (isStart) ChangePosition(inverseScale);
+        else
+        {
+            ChangePosition(!inverseScale);
+
+            GameDataManager.data.inversedScale = !inverseScale;
+        }
+
+        if (GameDataManager.data.inversedScale)
+        {
+            buttonScale.color = new Color(0, 0.75f, 0);
+            toggleScale.rectTransform.anchoredPosition = new Vector2(150, 0);
+        }
+        else
+        {
+            buttonScale.color = new Color(0.75f, 0, 0);
+            toggleScale.rectTransform.anchoredPosition = new Vector2(0, 0);
+        }
+
+        void ChangePosition(bool inverse)
+        {
+            scale.anchoredPosition = inverse ? new Vector2(-750, 0) : new Vector2(0, 0);
         }
     }
 
@@ -932,13 +968,13 @@ public class UI : MonoBehaviour
 
             MoveToTarget(name);
 
-            rect.rotation = Quaternion.Euler(0, 0, 180);
+            langArrow.rotation = Quaternion.Euler(0, 0, 180);
         }
         else
         {
             MoveToStartPos(name, default, OnClose);
 
-            rect.rotation = Quaternion.Euler(0, 0, 0);
+            langArrow.rotation = Quaternion.Euler(0, 0, 0);
         }
     }
     public void ChangeLanguage(string lang)
@@ -950,16 +986,17 @@ public class UI : MonoBehaviour
         ChangeShopItemsInfo();
         ChangeTexts();
         OnChangeText();
-        
+
         MoveToStartPos("LangSelect", default, OnClose);
 
-        rect.rotation = Quaternion.Euler(0, 0, 0);
+        langArrow.rotation = Quaternion.Euler(0, 0, 0);
 
         void ChangeShopItemsInfo()
         {
-            foreach (var i in clickItems) ChangeShopItemInfo(i.Value);
+            foreach (var i in clickItems) ChangeClickerItemInfo(i.Value);
+            foreach (var i in boosterItems) ChangeBoosterItemInfo(i.Value);
 
-            void ChangeShopItemInfo(ClickerItem<Clicker> clickerItem)
+            void ChangeClickerItemInfo(ClickerItem<Clicker> clickerItem)
             {
                 Clicker clicker = clickerItem.Clicker;
                 clickerItem.uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
@@ -978,6 +1015,16 @@ public class UI : MonoBehaviour
                         $"\n+{(int)(clicker.clickPowerDefault * 1.5f)}/{LanguageManager.GetLocalizedText("Sec")} {LanguageManager.GetLocalizedText("Off_")}";
                 }
             }
+
+            void ChangeBoosterItemInfo(BoosterItem<Booster> boosterItem)
+            {
+                Booster booster = boosterItem.Booster;
+                string key = booster is TimeBooster ? "TimeBoost" : "SoldierBoost";
+
+                boosterItem.uiInfo.name.text = LanguageManager.GetLocalizedText(boosterItem.uiInfo.name.name);
+                boosterItem.uiInfo.functional.text = $"{LanguageManager.GetLocalizedText(key)} {booster.abilityModifier}x - {booster.useTime}{LanguageManager.GetLocalizedText("Sec")}";
+                boosterItem.uiInfo.use.text = LanguageManager.GetLocalizedText("Use");
+            }
         }
         void ChangeTexts()
         {
@@ -992,57 +1039,58 @@ public class UI : MonoBehaviour
         objToClose?.SetActive(false);
     }
 
+    #endregion /Settings
+
     #endregion /More
 
     #region Prestige
 
     public void ApplyPrestige()
     {
-        try
+        Time.timeScale = 1;
+
+        MovingObjList.Clear();
+
+        int aliensHearts = GameDataManager.data.aliensHearts;
+        int prestige = GameDataManager.data.prestigeLvl;
+        float? timeToWinLeft = GameDataManager.data.timeToWinLeft;
+        float? enemySpawnStep = GameDataManager.data.enemySpawnStep;
+        string password = GameDataManager.data.passwordDebug;
+        string language = GameDataManager.data.language;
+        bool debugEnabled = GameDataManager.data.debugEnabled;
+        bool wasTutorial = GameDataManager.data.wasTutorial;
+
+        List<Clicker> clickers = new List<Clicker>();
+
+        foreach (var cl in GameDataManager.data.clickers)
         {
-            Time.timeScale = 1;
+            if (cl.Value is AutoClicker ac) ac.hasStart = false;
+            else if (cl.Value is UniversalClicker uc) uc.hasStart = false;
 
-            MovingObjList.Clear();
-
-            int aliensHearts = GameDataManager.data.aliensHearts;
-            int prestige = GameDataManager.data.prestigeLvl;
-            float? timeToWinLeft = GameDataManager.data.timeToWinLeft;
-            float? enemySpawnStep = GameDataManager.data.enemySpawnStep;
-            string password = GameDataManager.data.passwordDebug;
-            string language = GameDataManager.data.language;
-            bool debugEnabled = GameDataManager.data.debugEnabled;
-            bool wasTutorial = GameDataManager.data.wasTutorial;
-
-            foreach (var acl in GameDataManager.data.clickers)
-            {
-                if (acl.Value is AutoClicker ac) ac.hasStart = false; 
-                else if (acl.Value is UniversalClicker uc) uc.hasStart = false; 
-            }
-
-            GameDataManager.data = new GameData();
-
-            prestige++;
-            timeToWinLeft = 90 + (30 * prestige);
-            if (enemySpawnStep >= 0.02f) enemySpawnStep *= 0.75f;
-
-            GameDataManager.data.aliensHearts = aliensHearts + (prestige * 1000);
-            GameDataManager.data.soldiersCount = 1000000 * prestige + 51;
-            GameDataManager.data.prestigeLvl = prestige;
-            GameDataManager.data.timeToWinLeft = timeToWinLeft;
-            GameDataManager.data.enemySpawnStep = enemySpawnStep;
-            GameDataManager.data.passwordDebug = password;
-            GameDataManager.data.language = language;
-            GameDataManager.data.debugEnabled = debugEnabled;
-            GameDataManager.data.wasTutorial = wasTutorial;
-
-            SaveManager.Save(GameDataManager.data);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+            if (cl.Value.currency == Currency.AlienHeart) clickers.Add(cl.Value);
         }
-        catch (Exception e)
-        {
-            panels["Prestige"].SetActive(false);
-            MyDebug.LogError($"*** Error: {e.StackTrace} /// {e.Message} ***");
-        }
+
+        GameDataManager.data = new GameData();
+
+        prestige++;
+        timeToWinLeft = 90 + (30 * prestige);
+        if (enemySpawnStep >= 0.02f) enemySpawnStep *= 0.75f;
+
+        GameDataManager.data.aliensHearts = aliensHearts + (prestige * 1000);
+        GameDataManager.data.soldiersCount = 1000000 * prestige + 51;
+        GameDataManager.data.prestigeLvl = prestige;
+        GameDataManager.data.timeToWinLeft = timeToWinLeft;
+        GameDataManager.data.enemySpawnStep = enemySpawnStep;
+        GameDataManager.data.passwordDebug = password;
+        GameDataManager.data.language = language;
+        GameDataManager.data.debugEnabled = debugEnabled;
+        GameDataManager.data.wasTutorial = wasTutorial;
+
+        foreach (var cl in clickers) GameDataManager.data.clickers.Add(cl.name, cl);
+        GameDataManager.data.clickersCount = clickers.Count;
+
+        SaveManager.Save(GameDataManager.data);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
 
     public void RevertPrestige()

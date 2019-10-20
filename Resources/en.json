@@ -37,6 +37,22 @@
             "value": "Titanium clicker allows you to do work 4 times more effective"
         },
         {
+            "key": "IridiumClicker",
+            "value": "Iridium clicker"
+        },
+        {
+            "key": "IridiumClickerD",
+            "value": "Iridium is a very rare metal, so using it in clickers is quite an expensive task, but the effectiveness of such a clicker is very high."
+        },
+        {
+            "key": "AxyrillicClicker",
+            "value": "Axyrilic clicker"
+        },
+        {
+            "key": "AxyrillicClickerD",
+            "value": "And if you synthesize iridium with titanium and add alien crystals, then a new metal will come out - axyrill. In this metal is a monstrous force that can be used everywhere"
+        },
+        {
             "key": "Soldier",
             "value": "Soldier"
         },
@@ -149,6 +165,22 @@
             "value": "Scientists parted in earnest: they began to create people as if it were a common thing"
         },
         {
+            "key": "TitanuimMine",
+            "value": "Titanuim mine"
+        },
+        {
+            "key": "TitanuimMineD",
+            "value": "The main place for the extraction of titanium - mine"
+        },
+        {
+            "key": "TitansGenerator",
+            "value": "Titans generator"
+        },
+        {
+            "key": "TitansGeneratorD",
+            "value": "Thanks to the titanium mine, it is possible to generate titans - gigant robots whose main goal is to crush small people. Be careful when standing next to the robot, suddenly you are a small people"
+        },
+        {
             "key": "Watchtower",
             "value": "Watchtower"
         },
@@ -189,12 +221,20 @@
             "value": "After studying the received divine clicker, scientists risked charging it with an alien power. They quickly found the alien's heart, and with the help of thermonuclear fusion, scientists were able to charge divine clicker, which allows you to use all its power!"
         },
         {
+            "key": "DarkMatterGenerator",
+            "value": "Dark matter generator"
+        },
+        {
+            "key": "DarkMatterGeneratorD",
+            "value": "Scientists walk on thin ice, creating and using a dark matter generator. Let's hope they don’t destroy the Area from the inside."
+        },
+        {
             "key": "TimeAccelerator",
             "value": "Time accelerator"
         },
         {
             "key": "TimeAcceleratorD",
-            "value": "With the advent of gravitational space curvatures, time acceleration in 2 times for 5 minutes is now available to you. Back this thing is not yet able to work"
+            "value": "With the advent of gravitational space curvatures, time acceleration is now available to you. Back this thing is not yet able to work"
         },
         {
             "key": "AdvancedTimeAccelerator",
@@ -202,7 +242,7 @@
         },
         {
             "key": "AdvancedTimeAcceleratorD",
-            "value": "Scientists decided to improve the time accelerator by adding a pair of crystals created from alien tissues. Surprisingly, this gave a significant increase in the power of the time accelerator and now you can increase time in 4 times for 10 minutes"
+            "value": "Scientists decided to improve the time accelerator by adding a pair of crystals created from alien tissues. Surprisingly, this gave a significant increase in the power of the time accelerator"
         },
         {
             "key": "MolecularDoubler",
@@ -279,6 +319,10 @@
             "value": "sec"
         },
         {
+            "key": "Use",
+            "value": "Use"
+        },
+        {
             "key": "Level",
             "value": "Level"
         },
@@ -297,6 +341,14 @@
         {
             "key": "Upgrade",
             "value": "Upgrade"
+        },
+        {
+            "key": "TimeBoost",
+            "value": "Time boost"
+        },
+        {
+            "key": "SoldierBoost",
+            "value": "Soldier boost"
         },
         {
             "key": "Area51",
@@ -325,6 +377,10 @@
         {
             "key": "Sfx",
             "value": "Sounds"
+        },
+        {
+            "key": "InverseScale",
+            "value": "Inverse scale"
         },
         {
             "key": "Fps",

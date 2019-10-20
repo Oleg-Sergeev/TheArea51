@@ -126,7 +126,7 @@ public enum Currency
 
 [Serializable] public class BoosterShopItem : ShopItem
 {
-    [HideInInspector] public Text amount;
+    [HideInInspector] public Text amount, functional, use;
     [HideInInspector] public Button bttnUse;
 }
 

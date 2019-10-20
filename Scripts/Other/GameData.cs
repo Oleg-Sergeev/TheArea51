@@ -7,6 +7,7 @@ public class GameData
     {
         enemySpawnStep = 0.2f;
         timeToWinLeft = 90f;
+        dayStep = 60f;
         soldiersCount = 51;
         aliensHearts = 0;
         autoClickerBonus = 0;
@@ -29,15 +30,16 @@ public class GameData
         wasAttack = false;
         hasLost = false;
         hasRevertPrestige = false;
+        inversedScale = false;
         clickers = new Dictionary<string, Clicker>();
         boosters = new Dictionary<string, Booster>();
     }
 
-    public float? enemySpawnStep, timeToWinLeft;
+    public float? enemySpawnStep, timeToWinLeft, dayStep;
     public int? clickersCount;
     public int soldiersCount, aliensHearts, clickBonus, autoClickerBonus, offlineClickBonus, fps, leapCounter, maxHp, prestigeLvl;
     public string language, number, month, year, exitTime, passwordDebug;
-    public bool enableSFX, wasTutorial, wasAttack, isDefend, hasLost, hasRevertPrestige, debugEnabled;
+    public bool enableSFX, wasTutorial, wasAttack, isDefend, hasLost, hasRevertPrestige, debugEnabled, inversedScale;
 
     public bool hasChangedSaveStructure;
 

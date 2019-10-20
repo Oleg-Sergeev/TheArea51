@@ -25,7 +25,7 @@ public class GameDataManager : MonoBehaviour
 
         if (data.clickers.Count != data.clickersCount)
         {
-            Debug.LogWarning($"Clickers count ({data.clickers.Count}) != data clickers count ({data.clickersCount})");
+            MyDebug.LogWarning($"Clickers count ({data.clickers.Count}) != data clickers count ({data.clickersCount})");
             data.hasChangedSaveStructure = true;
             data.clickersCount = 0;
             data.clickBonus = 0;
@@ -62,6 +62,7 @@ public class GameDataManager : MonoBehaviour
             if (data.boosters == null) data.boosters = new Dictionary<string, Booster>();
             if (data.timeToWinLeft == null) data.timeToWinLeft = 90f;
             if (data.enemySpawnStep == null) data.enemySpawnStep = 0.2f;
+            if (data.dayStep == null) data.dayStep = 60f;
             if (data.clickersCount == null) data.clickersCount = data.clickers.Count;
         }
     }
