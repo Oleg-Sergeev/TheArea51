@@ -1,19 +1,57 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ShopManager : MonoBehaviour
 {
-    public static ShopManager Instance;
-
     public ManualClickerItem[] manualClickers;
     public AutoClickerItem[] autoClickers;
     public OfflineClickerItem[] offlineClickers;
     public UniversalClickerItem[] universalClickers;
-    public TimeBoosterItem[] timeBoosters;
+    public ModifierClickerItem[] modifierClickers;
     public SoldierBoosterItem[] soldierBoosters;
+    public TimeBoosterItem[] timeBoosters;
+    public RegenerationBoosterItem[] regenBoosters;
+    public DefenceBoosterItem[] defenceBoosters;
 
-    private void Awake() => Instance = this;
+    public static List<ClickerItem<Clicker>> clickerItems;
+    public static List<BoosterItem<Booster>> boosterItems;
+
+    private void Awake()
+    {
+        clickerItems = new List<ClickerItem<Clicker>>();
+        boosterItems = new List<BoosterItem<Booster>>();
+
+        AddClickerToList(manualClickers);
+        AddClickerToList(autoClickers);
+        AddClickerToList(offlineClickers);
+        AddClickerToList(universalClickers);
+        AddClickerToList(modifierClickers);
+        AddBoosterToList(timeBoosters);
+        AddBoosterToList(soldierBoosters);
+        AddBoosterToList(regenBoosters);
+        AddBoosterToList(defenceBoosters);
+
+        void AddClickerToList<T>(ClickerItem<T>[] clickerItemT) where T : Clicker
+        {
+            foreach (var item in clickerItemT)
+            {
+                ClickerItem<Clicker> clickerItem = new ClickerItem<Clicker>(item.uiInfo, item.Clicker);
+
+                clickerItems.Add(clickerItem);
+            }
+        }
+        void AddBoosterToList<T>(BoosterItem<T>[] boosterItemT) where T : Booster
+        {
+            foreach (var item in boosterItemT)
+            {
+                BoosterItem<Booster> boosterItem = new BoosterItem<Booster>(item.uiInfo, item.Booster);
+
+                boosterItems.Add(boosterItem);
+            }
+        }
+    }
 
     private void Start()
     {
@@ -69,6 +107,11 @@ public class ShopManager : MonoBehaviour
             if (clicker.GetType() == typeof(ManualClicker)) data.clickBonus += clicker.clickPowerDefault;
             if (clicker.GetType() == typeof(AutoClicker)) data.autoClickerBonus += clicker.clickPowerDefault;
             if (clicker.GetType() == typeof(OfflineClicker)) data.offlineClickBonus += clicker.clickPowerDefault;
+            if (clicker.GetType() == typeof(ModifierClicker))
+            {
+                ModifierClicker mcl = clicker as ModifierClicker;
+                data.modifierValue += mcl.modifierValue;
+            }
 
             if (!data.clickers.ContainsKey(clicker.name))
             {
@@ -126,8 +169,16 @@ public enum Currency
 
 [Serializable] public class BoosterShopItem : ShopItem
 {
+    public BoosterIcon boosterIcon;
     [HideInInspector] public Text amount, functional, use;
     [HideInInspector] public Button bttnUse;
+
+    [Serializable] public struct BoosterIcon
+    {
+        public GameObject iconObject;
+        public Sprite picture;
+        [HideInInspector] public Text text;
+    }
 }
 
 [Serializable] public class ClickerItem<T> where T : Clicker
@@ -145,6 +196,20 @@ public enum Currency
     {
         this.clicker = clicker;
         this.uiInfo = uiInfo;
+    }
+
+    public void Enable(bool enabled)
+    {
+        uiInfo.clickPower.enabled = enabled;
+        uiInfo.currency.enabled = enabled;
+        uiInfo.level.enabled = enabled;
+        uiInfo.name.enabled = enabled;
+        uiInfo.price.enabled = enabled;
+        uiInfo.avatarImage.enabled = enabled;
+        uiInfo.bttnBuy.GetComponent<Image>().enabled = enabled;
+        uiInfo.avatarImage.transform.parent.GetComponent<Image>().enabled = enabled;
+        uiInfo.avatarImage.transform.GetChild(0).GetComponent<Image>().enabled = enabled;
+        uiInfo.uiObject.GetComponent<Image>().enabled = enabled;
     }
 }
 
@@ -180,6 +245,14 @@ public enum Currency
         this.uiInfo = uiInfo;
     }
 }
+[Serializable] public class ModifierClickerItem : ClickerItem<ModifierClicker>
+{
+    public ModifierClickerItem(ClickerShopItem uiInfo, ModifierClicker clicker) : base(uiInfo, clicker)
+    {
+        this.clicker = clicker;
+        this.uiInfo = uiInfo;
+    }
+}
 
 
 [Serializable] public abstract class Clicker : Product
@@ -191,6 +264,10 @@ public enum Currency
     [HideInInspector] public bool hasBought;
 }
 
+[Serializable] public abstract class SpecialClicker : Clicker
+{
+    public abstract void UseAbility();
+}
 [Serializable] public class ManualClicker : Clicker
 {
 
@@ -293,6 +370,16 @@ public enum Currency
     }
 }
 
+[Serializable] public class ModifierClicker : SpecialClicker
+{
+    public float modifierValue;
+
+    public override void UseAbility()
+    {
+        Debug.Log("Use");
+    }
+}
+
 
 [Serializable] public class BoosterItem<T> where T : Booster
 {
@@ -309,8 +396,45 @@ public enum Currency
         this.uiInfo = uiInfo;
         this.booster = booster;
     }
+
+    public void Enable(bool enabled)
+    {
+        uiInfo.amount.enabled = enabled;
+        uiInfo.currency.enabled = enabled;
+        uiInfo.functional.enabled = enabled;
+        uiInfo.name.enabled = enabled;
+        uiInfo.price.enabled = enabled;
+        uiInfo.avatarImage.enabled = enabled;
+        uiInfo.bttnBuy.GetComponent<Image>().enabled = enabled;
+        uiInfo.bttnUse.GetComponent<Image>().enabled = enabled;
+        uiInfo.avatarImage.transform.parent.GetComponent<Image>().enabled = enabled;
+        uiInfo.avatarImage.transform.GetChild(0).GetComponent<Image>().enabled = enabled;
+        uiInfo.uiObject.GetComponent<Image>().enabled = enabled;
+    }
+
+    public virtual void UpdateIconInfo(bool enableIcon)
+    {
+        uiInfo.boosterIcon.text.text = $"{Booster.abilityModifier}xxx";
+
+        uiInfo.boosterIcon.iconObject.SetActive(enableIcon);
+    }
 }
 
+[Serializable] public class SoldierBoosterItem : BoosterItem<SoldierBooster>
+{
+    public SoldierBoosterItem(BoosterShopItem uiInfo, SoldierBooster booster) : base(uiInfo, booster)
+    {
+        this.uiInfo = uiInfo;
+        this.booster = booster;
+    }
+
+    public override void UpdateIconInfo(bool enableIcon)
+    {
+        uiInfo.boosterIcon.text.text = $"{SoldierBooster.SoldierModifier}x";
+
+        uiInfo.boosterIcon.iconObject.SetActive(enableIcon);
+    }
+}
 [Serializable] public class TimeBoosterItem : BoosterItem<TimeBooster>
 {
     public TimeBoosterItem(BoosterShopItem uiInfo, TimeBooster booster) : base (uiInfo, booster)
@@ -318,28 +442,60 @@ public enum Currency
         this.uiInfo = uiInfo;
         this.booster = booster;
     }
+
+    public override void UpdateIconInfo(bool enableIcon)
+    {
+        uiInfo.boosterIcon.text.text = $"{TimeBooster.TimeModifier}x";
+
+        uiInfo.boosterIcon.iconObject.SetActive(enableIcon);
+    }
 }
-[Serializable] public class SoldierBoosterItem : BoosterItem<SoldierBooster>
+[Serializable] public class RegenerationBoosterItem : BoosterItem<RegenerationBooster>
 {
-    public SoldierBoosterItem(BoosterShopItem uiInfo, SoldierBooster booster) : base (uiInfo, booster)
+    public RegenerationBoosterItem(BoosterShopItem uiInfo, RegenerationBooster booster) : base(uiInfo, booster)
     {
         this.uiInfo = uiInfo;
         this.booster = booster;
     }
-}
 
+    public override void UpdateIconInfo(bool enableIcon)
+    {
+        uiInfo.boosterIcon.text.text = $"+{RegenerationBooster.RegenModifier * 60}/{LanguageManager.GetLocalizedText("S")}";
+
+        uiInfo.boosterIcon.iconObject.SetActive(enableIcon);
+    }
+}
+[Serializable] public class DefenceBoosterItem : BoosterItem<DefenceBooster>
+{
+    public DefenceBoosterItem(BoosterShopItem uiInfo, DefenceBooster booster) : base(uiInfo, booster)
+    {
+        this.uiInfo = uiInfo;
+        this.booster = booster;
+    }
+
+    public override void UpdateIconInfo(bool enableIcon)
+    {
+        uiInfo.boosterIcon.text.text = $"{DefenceBooster.DefenceModifier * 100}%";
+
+        uiInfo.boosterIcon.iconObject.SetActive(enableIcon);
+    }
+}
 
 [Serializable] public abstract class Booster : Product
 {
     public bool IsUsing { get; protected set; }
-    public int useTime, abilityModifier;
-    [HideInInspector] public int amount, useTimeRemained;
+    public int useTime;
+    public float abilityModifier;
+    [HideInInspector] public int amount;
+    [HideInInspector] public float useTimeRemained;
 
     public abstract void Use();
 }
 
 [Serializable] public class TimeBooster : Booster
 {
+    public static float TimeModifier { get; set; } = 0;
+
     public override async void Use()
     {
         if (!IsUsing)
@@ -353,7 +509,9 @@ public enum Currency
 
         IsUsing = true;
 
-        Time.timeScale *= abilityModifier;
+        TimeModifier += abilityModifier;
+
+        Time.timeScale += abilityModifier;
 
         while (useTimeRemained > 0)
         {
@@ -361,7 +519,9 @@ public enum Currency
             await System.Threading.Tasks.Task.Delay(1000);
         }
 
-        Time.timeScale /= abilityModifier;
+        Time.timeScale -= abilityModifier;
+
+        TimeModifier -= abilityModifier;
 
         IsUsing = false;
 
@@ -373,7 +533,7 @@ public enum Currency
 
 [Serializable] public class SoldierBooster : Booster
 {
-    public static int SoldierModifier { get; set; } = 1;
+    public static float SoldierModifier { get; set; } = 1;
 
     public async override void Use()
     {
@@ -406,13 +566,86 @@ public enum Currency
     }
 }
 
+[Serializable] public class RegenerationBooster : Booster
+{
+    public static float RegenModifier { get; set; } = 0;
 
-interface IAutocliker
+    public async override void Use()
+    {
+        if (!IsUsing)
+        {
+            if (amount <= 0) return;
+
+            amount--;
+        }
+
+        EventManager.eventManager.UseBooster(name, false);
+
+        IsUsing = true;
+
+        RegenModifier += abilityModifier;
+
+        while (useTimeRemained > 0)
+        {
+            useTimeRemained -= Time.deltaTime;
+
+            GameDataManager.OnHpChange((int)abilityModifier);
+
+            await System.Threading.Tasks.Task.Yield();
+        }
+
+        RegenModifier -= abilityModifier;
+
+        IsUsing = false;
+
+        EventManager.eventManager.UseBooster(name, true);
+
+        useTimeRemained = useTime;
+    }
+}
+
+[Serializable] public class DefenceBooster : Booster
+{
+    public static float DefenceModifier { get; set; } = 0;
+
+    public async override void Use()
+    {
+        if (!IsUsing)
+        {
+            if (amount <= 0) return;
+
+            amount--;
+        }
+
+        EventManager.eventManager.UseBooster(name, false);
+
+        IsUsing = true;
+
+        DefenceModifier += abilityModifier;
+
+        while (useTimeRemained > 0)
+        {
+            useTimeRemained -= 1;
+
+            await System.Threading.Tasks.Task.Delay(1000);
+        }
+
+        DefenceModifier -= abilityModifier;
+
+        IsUsing = false;
+
+        EventManager.eventManager.UseBooster(name, true);
+
+        useTimeRemained = useTime;
+    }
+}
+
+public interface IAutocliker
 {
     void AutoClick();
 }
 
-interface IOfflineClicker
+public interface IOfflineClicker
 {
     void RememberTime();
 

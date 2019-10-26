@@ -319,6 +319,10 @@
             "value": "sec"
         },
         {
+            "key": "S",
+            "value": "s"
+        },
+        {
             "key": "Use",
             "value": "Use"
         },

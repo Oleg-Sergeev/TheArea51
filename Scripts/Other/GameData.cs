@@ -36,6 +36,7 @@ public class GameData
     }
 
     public float? enemySpawnStep, timeToWinLeft, dayStep;
+    public float modifierValue;
     public int? clickersCount;
     public int soldiersCount, aliensHearts, clickBonus, autoClickerBonus, offlineClickBonus, fps, leapCounter, maxHp, prestigeLvl;
     public string language, number, month, year, exitTime, passwordDebug;

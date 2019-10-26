@@ -95,7 +95,9 @@ public class GameDataManager : MonoBehaviour
         }
         else if (hp <= 0 && data.soldiersCount >= 0)
         {
-            data.soldiersCount += hp;
+            hp = -hp;
+            MyDebug.Log($"{hp} {hp - (int)(DefenceBooster.DefenceModifier * hp)}");
+            data.soldiersCount -= hp - (int)(DefenceBooster.DefenceModifier * hp);
             if (data.soldiersCount <= 0)
                 EventManager.eventManager.EndAttack(false);
         }

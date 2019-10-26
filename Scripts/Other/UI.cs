@@ -41,6 +41,7 @@ public class UI : MonoBehaviour
         #region Init
         clickItems = new Dictionary<string, ClickerItem<Clicker>>();
         boosterItems = new Dictionary<string, BoosterItem<Booster>>();
+        
         panels = new Dictionary<string, GameObject>();
 
         langSprites = new Dictionary<string, Sprite>();
@@ -66,7 +67,7 @@ public class UI : MonoBehaviour
 
         ChangeLanguage(GameDataManager.data.language);
 
-        calendar.number.text = GameDataManager.data.number;
+        calendar.day.text = GameDataManager.data.number;
         calendar.month.text = LanguageManager.GetLocalizedText(GameDataManager.data.month);
         calendar.year.text = GameDataManager.data.year;
         calendar.SynchronizeDate();
@@ -76,39 +77,23 @@ public class UI : MonoBehaviour
             panels.Add(i.name, i);
             panels[i.name].SetActive(false);
         }
-        panels["Clickers"].SetActive(true);
+        panels["Clickers"].SetActive(true);        
 
-        foreach (var i in ShopManager.Instance.manualClickers)
+        foreach(var clickerItem in ShopManager.clickerItems)
         {
-            i.Clicker = InitializeClicker(i.Clicker);
-            InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
+            clickerItem.Clicker = InitializeClicker(clickerItem.Clicker);
+            InitializeClickerInfo(new ClickerItem<Clicker>(clickerItem.uiInfo, clickerItem.Clicker), clickItems);
+
+            clickItems[clickerItem.Clicker.name].Enable(false);
         }
-        foreach (var i in ShopManager.Instance.autoClickers)
+        foreach (var boosterItem in ShopManager.boosterItems)
         {
-            i.Clicker = InitializeClicker(i.Clicker);
-            InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
-        }
-        foreach (var i in ShopManager.Instance.offlineClickers)
-        {
-            i.Clicker = InitializeClicker(i.Clicker);
-            InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
-        }
-        foreach (var i in ShopManager.Instance.universalClickers)
-        {
-            i.Clicker = InitializeClicker(i.Clicker);
-            InitializeClickerInfo(new ClickerItem<Clicker>(i.uiInfo, i.Clicker), clickItems);
-        }
-        foreach (var i in ShopManager.Instance.timeBoosters)
-        {
-            i.Booster = InitializeBooster(i.Booster);
-            InitializeBoosterInfo(new BoosterItem<Booster>(i.uiInfo, i.Booster), boosterItems);
-            if (i.Booster.IsUsing) i.Booster.Use();
-        }
-        foreach (var i in ShopManager.Instance.soldierBoosters)
-        {
-            i.Booster = InitializeBooster(i.Booster);
-            InitializeBoosterInfo(new BoosterItem<Booster>(i.uiInfo, i.Booster), boosterItems);
-            if (i.Booster.IsUsing) i.Booster.Use();
+            boosterItem.Booster = InitializeBooster(boosterItem.Booster);
+            InitializeBoosterInfo(new BoosterItem<Booster>(boosterItem.uiInfo, boosterItem.Booster), boosterItems);
+
+            if (boosterItem.Booster.IsUsing) boosterItem.Booster.Use();
+
+            boosterItems[boosterItem.Booster.name].Enable(false);
         }
 
         if (GameDataManager.data.debugEnabled)
@@ -156,6 +141,7 @@ public class UI : MonoBehaviour
 
         OnChangeText();
 
+        GameDataManager.data.modifierValue = 2;
 
         T InitializeClicker<T>(T clicker) where T : Clicker
         {
@@ -293,6 +279,8 @@ public class UI : MonoBehaviour
             boosterItem.uiInfo.use = boosterItem.uiInfo.uiObject.GetChild(5).GetChild(1).GetComponent<Text>();
             boosterItem.uiInfo.functional = boosterItem.uiInfo.uiObject.GetChild(5).GetChild(2).GetComponent<Text>();
             boosterItem.uiInfo.bttnUse = boosterItem.uiInfo.uiObject.GetChild(5).GetComponent<Button>();
+            boosterItem.uiInfo.boosterIcon.text = boosterItem.uiInfo.boosterIcon.iconObject.transform.GetChild(2).GetComponent<Text>();
+            boosterItem.uiInfo.boosterIcon.iconObject.transform.GetChild(0).GetComponent<Image>().sprite = boosterItem.uiInfo.boosterIcon.picture;
 
             boosterItems.Add(booster.name, boosterItem);
 
@@ -319,8 +307,50 @@ public class UI : MonoBehaviour
 
     public static T GetProduct<T>(string name) where T : Product
     {
-        if (clickItems.ContainsKey(name)) return clickItems[name].Clicker as T;
-        else if (boosterItems.ContainsKey(name)) return boosterItems[name].Booster as T;
+        if (clickItems.ContainsKey(name))
+        {
+            if (clickItems[name].Clicker is T productT) return productT;
+            return null;
+        }
+        else if (boosterItems.ContainsKey(name))
+        {
+            if (boosterItems[name].Booster is T productT) return productT;
+            return null;
+        }
+        return null;
+    }
+    public static bool TryGetProduct<T>(string name, out T product) where T : Product
+    {
+        product = null;
+
+        if (clickItems.ContainsKey(name))
+        {
+            if (clickItems[name].Clicker is T productT)
+            {
+                product = productT;
+                return true;
+            }
+        }
+        else if (boosterItems.ContainsKey(name))
+        {
+            if (boosterItems[name].Booster is T productT)
+            {
+                product = productT;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static ClickerItem<Clicker> GetClickerItem(string name)
+    {
+        if (clickItems.ContainsKey(name)) return clickItems[name];
+        else return null;
+    }
+    public static BoosterItem<Booster> GetBoosterItem(string name)
+    {
+        if (boosterItems.ContainsKey(name)) return boosterItems[name];
         else return null;
     }
     public static GameObject GetPanel(string name)
@@ -349,7 +379,7 @@ public class UI : MonoBehaviour
     private float timeScale;
     private void NextDay()
     {
-        if (!GameDataManager.data.wasAttack && calendar.number.text == "20" && calendar.month.text == LanguageManager.GetLocalizedText("Sept"))
+        if (!GameDataManager.data.wasAttack && calendar.day.text == "20" && calendar.month.text == LanguageManager.GetLocalizedText("Sept"))
         {
             if (!GameDataManager.data.isDefend)
             {
@@ -495,8 +525,9 @@ public class UI : MonoBehaviour
         activeSection.color = Color.green;
     }
 
+
     #region Modifier
-    private float speed = 0, speedLimit = 0.0025f, timer = 0.2f;
+    private float speed = 0, speedAcceleration = 0.002f, speedLimit = 0.005f, timer = 0.2f, timerKoef = 0.1f;
 
     public void OnChangeValue()
     {
@@ -506,9 +537,12 @@ public class UI : MonoBehaviour
     float deltaClickTime = 0;
     private void IncreaseSpeed()
     {
-        timer = 0.2f * (1 / sliderModifier.value * 2);
-        if (0.25f * (float)Math.Pow(0.55f, Math.Floor(sliderModifier.value) - 1) <= deltaClickTime) deltaClickTime = 0;
-        if (speed <= speedLimit + (1 / sliderModifier.value * speedLimit)) speed += ((0.25f * (float)Math.Pow(0.55f, Math.Floor(sliderModifier.value) - 1)) - deltaClickTime) * speedLimit;
+        float clickPower = 1 + GameDataManager.data.modifierValue;
+        float clickKoef = (float)Math.Pow(0.55f, Math.Floor(sliderModifier.value) - 1);
+
+        timer = (clickPower / sliderModifier.value * 2) * timerKoef;
+        if (speedAcceleration * clickKoef <= deltaClickTime) deltaClickTime = 0;
+        if (speed <= speedLimit) speed += ((speedAcceleration * clickKoef) - deltaClickTime);
 
         deltaClickTime = 0;
         ChangeValue();
@@ -737,17 +771,8 @@ public class UI : MonoBehaviour
         var boosterItem = boosterItems[name];
 
         boosterItem.uiInfo.bttnUse.interactable = hasEnded && boosterItem.Booster.amount > 0;
-
-        if (boosterItem.Booster is TimeBooster)
-        {
-            modifiers[0].SetActive(!hasEnded);
-            modifiers[0].transform.GetChild(0).GetComponent<Text>().text = $"{boosterItem.Booster.abilityModifier}x";
-        }
-        else if (boosterItem.Booster is SoldierBooster)
-        {
-            modifiers[1].SetActive(!hasEnded);
-            modifiers[1].transform.GetChild(0).GetComponent<Text>().text = $"{boosterItem.Booster.abilityModifier}x";
-        }
+        
+        boosterItem.UpdateIconInfo(!hasEnded);
 
         boosterItem.uiInfo.amount.text = $"{boosterItem.Booster.amount}x";
     }
@@ -844,28 +869,30 @@ public class UI : MonoBehaviour
 
     public void SpeedUpTime(Text name)
     {
-        TimeBooster timeBooster = GetProduct<TimeBooster>(name.name);
-
-        if (timeBooster == null)
-        {
-            MyDebug.LogError($"time booster {name.name} not found");
-            return;
-        }
-
-        timeBooster.Use();
+        if (TryGetProduct(name.name, out TimeBooster timeBooster))
+            timeBooster.Use();
+        else MyDebug.LogError($"Time booster {name.name} not found");
     }
 
     public void IncreaseSoldiers(Text name)
     {
-        SoldierBooster soldierBooster = GetProduct<SoldierBooster>(name.name);
+        if (TryGetProduct(name.name, out SoldierBooster soldierBooster))
+            soldierBooster.Use();
+        else MyDebug.LogError($"Soldier booster {name.name} not found");
+    }
 
-        if (soldierBooster == null)
-        {
-            MyDebug.LogError($"soldier booster {name.name} not found");
-            return;
-        }
+    public void Regen(Text name)
+    {
+        if (TryGetProduct(name.name, out RegenerationBooster regenBooster))
+            regenBooster.Use();
+        else MyDebug.LogError($"Regen booster {name.name} not found");
+    }
 
-        soldierBooster.Use();
+    public void Defence(Text name)
+    {
+        if (TryGetProduct(name.name, out DefenceBooster defenceBooster))
+            defenceBooster.Use();
+        else MyDebug.LogError($"Defence booster {name.name} not found");
     }
 
     #endregion
@@ -1061,6 +1088,7 @@ public class UI : MonoBehaviour
         bool wasTutorial = GameDataManager.data.wasTutorial;
 
         List<Clicker> clickers = new List<Clicker>();
+        List<Booster> boosters = new List<Booster>();
 
         foreach (var cl in GameDataManager.data.clickers)
         {
@@ -1068,6 +1096,10 @@ public class UI : MonoBehaviour
             else if (cl.Value is UniversalClicker uc) uc.hasStart = false;
 
             if (cl.Value.currency == Currency.AlienHeart) clickers.Add(cl.Value);
+        }
+        foreach (var b in GameDataManager.data.boosters)
+        {
+            if (b.Value.currency == Currency.AlienHeart) boosters.Add(b.Value);
         }
 
         GameDataManager.data = new GameData();
@@ -1086,6 +1118,7 @@ public class UI : MonoBehaviour
         GameDataManager.data.debugEnabled = debugEnabled;
         GameDataManager.data.wasTutorial = wasTutorial;
 
+        foreach (var b in boosters) GameDataManager.data.boosters.Add(b.name, b);
         foreach (var cl in clickers) GameDataManager.data.clickers.Add(cl.name, cl);
         GameDataManager.data.clickersCount = clickers.Count;
 
@@ -1158,6 +1191,14 @@ public class UI : MonoBehaviour
         Application.Quit();
     }
 
+    public void SkipToBattle()
+    {
+        while(calendar.day.text != "20" || calendar.month.text != LanguageManager.GetLocalizedText("Sept"))
+        {
+            NextDay();
+        }
+    }
+
     public void OnLowMemory()
     {
         MyDebug.LogWarning($"*** Low memory ***");
@@ -1170,21 +1211,21 @@ public class UI : MonoBehaviour
     [Serializable]
     public struct Calendar
     {
-        public Text month, number, year;
+        public Text month, day, year;
         public Queue<string> months;
         public List<string> months30Ending, months31Ending;
 
         public static Calendar operator ++(Calendar calendar)
         {
-            if ((calendar.number.text == "30" && calendar.months30Ending.Contains(calendar.months.Peek())) ||
-                (calendar.number.text == "31" && calendar.months31Ending.Contains(calendar.months.Peek())) ||
-                (calendar.number.text == (GameDataManager.data.leapCounter != 4 ? "28" : "29") && calendar.months.Peek() == "Feb"))
+            if ((calendar.day.text == "30" && calendar.months30Ending.Contains(calendar.months.Peek())) ||
+                (calendar.day.text == "31" && calendar.months31Ending.Contains(calendar.months.Peek())) ||
+                (calendar.day.text == (GameDataManager.data.leapCounter != 4 ? "28" : "29") && calendar.months.Peek() == "Feb"))
             {
                 calendar.NextMonth();
             }
-            calendar.number.text = (int.Parse(calendar.number.text) + 1).ToString();
+            calendar.day.text = (int.Parse(calendar.day.text) + 1).ToString();
 
-            GameDataManager.data.number = calendar.number.text;
+            GameDataManager.data.number = calendar.day.text;
 
             return calendar;
         }
@@ -1203,7 +1244,7 @@ public class UI : MonoBehaviour
             string currentMonth = months.Dequeue();
             month.text = LanguageManager.GetLocalizedText(months.Peek());
             months.Enqueue(currentMonth);
-            number.text = "0";
+            day.text = "0";
 
             if (currentMonth == "Dec")
             {

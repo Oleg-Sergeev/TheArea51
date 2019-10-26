@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using Newtonsoft.Json;
 using UnityEngine;
 
 public static class SaveManager
@@ -8,6 +9,8 @@ public static class SaveManager
 
     public static void Save(GameData data)
     {
+        try
+        {
         string generalPath = "";
 #if UNITY_ANDROID && !UNITY_EDITOR
         generalPath = Application.persistentDataPath;
@@ -15,8 +18,7 @@ public static class SaveManager
 #if UNITY_EDITOR
         generalPath = Application.dataPath;
 #endif
-        try
-        {
+        
             string savePath = generalPath + "/Save.zg";
 
             if (!deleteGame)
@@ -26,6 +28,12 @@ public static class SaveManager
                     BinaryFormatter formatter = new BinaryFormatter();
 
                     formatter.Serialize(fileStream, data);
+                }
+
+                if (Application.isEditor)
+                {
+                    string json = JsonConvert.SerializeObject(data);
+                    PlayerPrefs.SetString("DEBUG", json);
                 }
             }
             else
@@ -43,6 +51,8 @@ public static class SaveManager
 
     public static GameData Load()
     {
+        try
+        { 
         string generalPath = "";
 #if UNITY_ANDROID && !UNITY_EDITOR
         generalPath = Application.persistentDataPath;
@@ -50,8 +60,7 @@ public static class SaveManager
 #if UNITY_EDITOR
         generalPath = Application.dataPath;
 #endif
-        try
-        {
+        
             string savePath = generalPath + "/Save.zg";
 
             if (!File.Exists(savePath)) return null;
