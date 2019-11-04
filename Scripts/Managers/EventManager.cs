@@ -7,7 +7,7 @@ public class EventManager
     public event Action<bool> OnEndAttack;
     public event Action<int> OnClick, OnHpChange;
     public event Action<Product, Action<bool>> OnBuy;
-    public event Action<string, bool> OnBoosterUsed;
+    public event Action<Booster, bool> OnBoosterUsed;
     public event Action OnAnyAction, OnHpHasChanged;
 
     public void EndAttack(bool isWin)
@@ -27,9 +27,9 @@ public class EventManager
             OnHpHasChanged();
         }
     }
-    public void UseBooster(string name, bool hasEnded)
+    public void UseBooster<T>(T booster, bool hasEnded) where T : Booster
     {
-        OnBoosterUsed(name, hasEnded);
+        OnBoosterUsed(booster, hasEnded);
     }
     public void Buy<T>(T clicker, Action<bool> success = default) where T : Product
     {

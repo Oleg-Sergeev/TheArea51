@@ -229,6 +229,14 @@
             "value": "Scientists walk on thin ice, creating and using a dark matter generator. Let's hope they don’t destroy the Area from the inside."
         },
         {
+            "key": "ShockAbsorber",
+            "value": "Shock absorber"
+        },
+        {
+            "key": "ShockAbsorberD",
+            "value": "Shock absorbers allow the soldier modifier scale to counteract the force of gravity longer, i.e. don't let the scale fall down"
+        },
+        {
             "key": "TimeAccelerator",
             "value": "Time accelerator"
         },
@@ -251,6 +259,30 @@
         {
             "key": "MolecularDoublerD",
             "value": "Creating a human clone is a rather long task, so scientists decided to create a doubler of molecules. With its help, DNA is cloned and the creation of a clone begins immediately."
+        },
+        {
+            "key": "TissueHealer",
+            "value": "Tissue healer"
+        },
+        {
+            "key": "TissueHealerD",
+            "value": "One syringe is enough to completely restore all the tissues of the fighter and return him to the system"
+        },
+        {
+            "key": "ReinforcedWalls",
+            "value": "Reinforced walls"
+        },
+        {
+            "key": "ReinforcedWallsD",
+            "value": "What is needed for perfect walls? Stones, wood and some scotch tape. If you add metal to this, the result is even better"
+        },
+        {
+            "key": "RescuePill",
+            "value": "Rescue pill"
+        },
+        {
+            "key": "RescuePillD",
+            "value": "The rescue pill forbidden in the Ramasian Fedoration is actively used in critical situations in Area 51. Its main advantage is that it treats many fighters and instantly"
         },
 
 
@@ -347,12 +379,24 @@
             "value": "Upgrade"
         },
         {
-            "key": "TimeBoost",
+            "key": "TimeBooster",
             "value": "Time boost"
         },
         {
-            "key": "SoldierBoost",
-            "value": "Soldier boost"
+            "key": "SoldierBooster",
+            "value": "Increased soldier production"
+        },
+        {
+            "key": "RegenBooster",
+            "value": "Soldier regeneration"
+        },
+        {
+            "key": "InstantHealthBooster",
+            "value": "Soldier instant replenishment"
+        },
+        {
+            "key": "DefenceBooster",
+            "value": "Damage absorption"
         },
         {
             "key": "Area51",
@@ -458,6 +502,14 @@
         {
             "key": "SectionSoldierBoosters",
             "value": "Soldier boosters"
+        },
+        {
+            "key": "SectionDefenceBoosters",
+            "value": "Defence boosters"
+        },
+        {
+            "key": "SectionSpecialAmplifications",
+            "value": "Special amplifications"
         },
         {
             "key": "Clickers",

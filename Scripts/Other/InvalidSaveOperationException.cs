@@ -23,7 +23,7 @@ public class InvalidSaveOperationException : Exception
     {
         string lastLogs = "";
         
-        string currentLog = $"*** Error {exceptionCode}: {inner.StackTrace} /***/ {inner.Message} ***\n";
+        string currentLog = $"*** Error {exceptionCode}: {inner.Message}\n{inner.StackTrace} ***\n";
 
         if (File.Exists(logPath)) lastLogs = File.ReadAllText(logPath);
 

@@ -19,6 +19,8 @@ public class GameDataManager : MonoBehaviour
 
         EventManager.eventManager.OnClick += OnClick;
 
+        data.timerIncreasingValue = data.modifierValue;
+
         CheckForNull(data);
 
         StartCoroutine(Save());
@@ -26,7 +28,6 @@ public class GameDataManager : MonoBehaviour
         if (data.clickers.Count != data.clickersCount)
         {
             MyDebug.LogWarning($"Clickers count ({data.clickers.Count}) != data clickers count ({data.clickersCount})");
-            data.hasChangedSaveStructure = true;
             data.clickersCount = 0;
             data.clickBonus = 0;
             data.autoClickerBonus = 0;
@@ -60,6 +61,8 @@ public class GameDataManager : MonoBehaviour
         {
             if (data.clickers == null) data.clickers = new Dictionary<string, Clicker>();
             if (data.boosters == null) data.boosters = new Dictionary<string, Booster>();
+            if (data.specAmplifications == null) data.specAmplifications = new Dictionary<string, SpecialAmplification>();
+            if (data.products == null) data.products = new Dictionary<string, Product>();
             if (data.timeToWinLeft == null) data.timeToWinLeft = 90f;
             if (data.enemySpawnStep == null) data.enemySpawnStep = 0.2f;
             if (data.dayStep == null) data.dayStep = 60f;
@@ -79,7 +82,7 @@ public class GameDataManager : MonoBehaviour
 
         PoolManager.Instance.CreatePools();
 
-        data.isDefend = true;
+        data.isDefend = true;       
     }
 
     public static void OnHpChange(int hp)
@@ -96,7 +99,6 @@ public class GameDataManager : MonoBehaviour
         else if (hp <= 0 && data.soldiersCount >= 0)
         {
             hp = -hp;
-            MyDebug.Log($"{hp} {hp - (int)(DefenceBooster.DefenceModifier * hp)}");
             data.soldiersCount -= hp - (int)(DefenceBooster.DefenceModifier * hp);
             if (data.soldiersCount <= 0)
                 EventManager.eventManager.EndAttack(false);
