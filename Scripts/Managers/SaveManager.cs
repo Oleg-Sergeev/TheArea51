@@ -16,7 +16,7 @@ public static class SaveManager
             generalPath = Application.persistentDataPath;
 #endif
 #if UNITY_EDITOR
-            generalPath = Application.dataPath;
+            generalPath = Application.dataPath + "/TheArea51/Editor";
 #endif
 
             string savePath = generalPath + "/Save.zg";
@@ -34,7 +34,7 @@ public static class SaveManager
 
                 if (Application.isEditor)
                 {
-                    File.WriteAllText($"{Application.dataPath}/Debug.json", JsonUtility.ToJson(data, true));
+                    File.WriteAllText($"{Application.dataPath}/TheArea51/Editor/Debug.json", JsonUtility.ToJson(data, true));
                 }
             }
             else
@@ -64,7 +64,7 @@ public static class SaveManager
             generalPath = Application.persistentDataPath;
 #endif
 #if UNITY_EDITOR
-            generalPath = Application.dataPath;
+            generalPath = Application.dataPath + "/TheArea51/Editor";
 #endif
 
             string savePath = generalPath + "/Save.zg";

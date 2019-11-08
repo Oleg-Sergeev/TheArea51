@@ -31,9 +31,9 @@ public class EventManager
     {
         OnBoosterUsed(booster, hasEnded);
     }
-    public void Buy<T>(T clicker, Action<bool> success = default) where T : Product
+    public void Buy<T>(T product, Action<bool> success = default) where T : Product
     {
-        OnBuy(clicker, success);
+        OnBuy(product, success);
         OnAnyAction();
     }
 }

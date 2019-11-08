@@ -5,7 +5,9 @@ using System.Runtime.Serialization;
 [Serializable]
 public class InvalidSaveOperationException : Exception
 {
-    private static string logPath = (UnityEngine.Application.isEditor ? UnityEngine.Application.dataPath : UnityEngine.Application.persistentDataPath) + "/Log.txt";
+    private static string logPath = (UnityEngine.Application.isEditor
+        ? UnityEngine.Application.dataPath + "/TheArea51/Editor" 
+        : UnityEngine.Application.persistentDataPath) + "/Log.txt";
 
     public InvalidSaveOperationException() : base() {}
     public InvalidSaveOperationException(string message) : base(message)

@@ -480,7 +480,7 @@
         },
 
         {
-            "key": "SectionClickers",
+            "key": "SectionManualClickers",
             "value": "Manual clickers"
         },
         {
@@ -504,12 +504,20 @@
             "value": "Soldier boosters"
         },
         {
+            "key": "SectionRegenBoosters",
+            "value": "Regen boosters"
+        },
+        {
+            "key": "SectionInstantHealthBoosters",
+            "value": "Instant health boosters"
+        },
+        {
             "key": "SectionDefenceBoosters",
             "value": "Defence boosters"
         },
         {
-            "key": "SectionSpecialAmplifications",
-            "value": "Special amplifications"
+            "key": "SectionTimeSoldierModifiers",
+            "value": "Soldier scale upgrades"
         },
         {
             "key": "Clickers",

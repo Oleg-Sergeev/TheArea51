@@ -45,8 +45,11 @@ public class ShopManager : MonoBehaviour
 
                 clickerItems.Add(clickerItem);
             }
+
+            UI.productsCount.Add(typeof(T));
+
         }
-        void AddBoosterToList<T>(BoosterItem<T>[] boosterItemT) where T : Booster
+        void AddBoosterToList<T>(BoosterItem<T>[] boosterItemT, bool addType = true) where T : Booster
         {
             foreach (var item in boosterItemT)
             {
@@ -54,8 +57,10 @@ public class ShopManager : MonoBehaviour
 
                 boosterItems.Add(boosterItem);
             }
+
+            UI.productsCount.Add(typeof(T));
         }
-        void AddSpecAmplificationToList<T>(SpecialAmplificationItem<T>[] specialAmplificationItemT) where T : SpecialAmplification
+        void AddSpecAmplificationToList<T>(SpecialAmplificationItem<T>[] specialAmplificationItemT, bool addType = true) where T : SpecialAmplification
         {
             foreach (var item in specialAmplificationItemT)
             {
@@ -63,6 +68,8 @@ public class ShopManager : MonoBehaviour
 
                 specAmplificationItems.Add(samplificationItem);
             }
+
+            UI.productsCount.Add(typeof(T));
         }
     }
 
@@ -121,10 +128,9 @@ public class ShopManager : MonoBehaviour
             if (clicker.GetType() == typeof(AutoClicker)) data.autoClickerBonus += clicker.clickPowerDefault;
             if (clicker.GetType() == typeof(OfflineClicker)) data.offlineClickBonus += clicker.clickPowerDefault;
 
-            if (!data.clickers.ContainsKey(clicker.name))
+            if (!data.products.ContainsKey(clicker.name))
             {
-                data.clickers.Add(clicker.name, clicker);
-                data.clickersCount++;
+                data.products.Add(clicker.name, clicker);
             }
 
             if (clicker.currentPrice < 0) clicker.currentPrice = int.MaxValue;
@@ -144,7 +150,7 @@ public class ShopManager : MonoBehaviour
 
             if (booster is IDefendBooster defendBooster) defendBooster.CheckAvailabilityUse();
 
-            if (!data.boosters.ContainsKey(booster.name)) data.boosters.Add(booster.name, booster);
+            if (!data.products.ContainsKey(booster.name)) data.products.Add(booster.name, booster);
         }
         else if (product is SpecialAmplification modifier)
         {
@@ -166,7 +172,7 @@ public class ShopManager : MonoBehaviour
 
             if (modifier.currentPrice < 0) modifier.currentPrice = int.MaxValue;
 
-            if (!data.specAmplifications.ContainsKey(modifier.name)) data.specAmplifications.Add(modifier.name, modifier);
+            if (!data.products.ContainsKey(modifier.name)) data.products.Add(modifier.name, modifier);
         }
         else
         {
@@ -191,12 +197,30 @@ public enum Currency
     public Currency currency = Currency.Soldier;
     public string name;
     public int priceDefault;
+
+    public static T DownCast<T>(Product product) where T : Product
+    {
+        if (product is T) return product as T;
+        return null;
+    }
+    public static bool TryDownCast<T>(Product product, out T productT) where T : Product
+    {
+        productT = null;
+
+        if (product is T)
+        {
+            productT = product as T;
+            return true;
+        }
+
+        return false;
+    }
 }
 
 [Serializable] public abstract class ShopItem
 {
-    public Transform uiObject;
     public Sprite avatar;
+    [HideInInspector] public Transform uiObject;
     [HideInInspector] public Text name, price;
     [HideInInspector] public Button bttnBuy;
     [HideInInspector] public Image avatarImage, currency;
@@ -226,16 +250,26 @@ public enum Currency
     [HideInInspector] public Text level, modifierValue;
 }
 
+[Serializable] public class ProductItem<T> where T : Product
+{
+    public ShopItem uiInfo;
+
+    [SerializeField] protected T product;
+    [HideInInspector] public T Product { get => product; set => product = value; }
+
+    public ProductItem(ShopItem uiInfo, T product)
+    {
+        this.uiInfo = uiInfo;
+        this.product = product;
+    }
+}
+
 [Serializable] public class ClickerItem<T> where T : Clicker
 {
     public ClickerShopItem uiInfo;
 
     [SerializeField] protected T clicker;
-    [HideInInspector] public T Clicker
-    {
-        get => clicker;
-        set => clicker = value;
-    }
+    [HideInInspector] public T Clicker { get => clicker; set => clicker = value; }
     
     public ClickerItem(ClickerShopItem uiInfo, T clicker)
     {
@@ -294,16 +328,12 @@ public enum Currency
 [Serializable] public abstract class Clicker : Product
 {
     public int clickPowerDefault;
-    public int level;
+    [HideInInspector] public int level;
     [HideInInspector] public int allClickPower;
     [HideInInspector] public int currentPrice;
     [HideInInspector] public bool hasBought;
 }
 
-[Serializable] public abstract class SpecialClicker : Clicker
-{
-    public abstract void UseAbility();
-}
 [Serializable] public class ManualClicker : Clicker
 {
 
@@ -311,8 +341,7 @@ public enum Currency
 
 [Serializable] public class AutoClicker : Clicker, IAutocliker
 {
-    [NonSerialized]
-    public bool hasStart;
+    [NonSerialized] public bool hasStart;
 
     async public void AutoClick()
     {
@@ -336,7 +365,7 @@ public enum Currency
 
 [Serializable] public class OfflineClicker : Clicker, IOfflineClicker
 {
-    public void RememberTime()
+    public static void RememberTime()
     {
         GameDataManager.data.exitTime = DateTime.Now.ToString();
     }
@@ -737,8 +766,6 @@ public interface IAutocliker
 
 public interface IOfflineClicker
 {
-    void RememberTime();
-
     void CalculateProduction();
 }
 

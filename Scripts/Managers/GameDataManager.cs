@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,54 +20,40 @@ public class GameDataManager : MonoBehaviour
 
         EventManager.eventManager.OnClick += OnClick;
 
+        CheckForNull(data);
+
         data.timerIncreasingValue = data.modifierValue;
 
-        CheckForNull(data);
+        CheckData(data);
 
         StartCoroutine(Save());
 
-        if (data.clickers.Count != data.clickersCount)
+        foreach (var acl in data.products)
         {
-            MyDebug.LogWarning($"Clickers count ({data.clickers.Count}) != data clickers count ({data.clickersCount})");
-            data.clickersCount = 0;
-            data.clickBonus = 0;
-            data.autoClickerBonus = 0;
-            data.offlineClickBonus = 0;
-            foreach (var cl in data.clickers)
+            if (acl.Value is IAutocliker autocliker)
             {
-                if (cl.Value is ManualClicker clicker) data.clickBonus += clicker.allClickPower;
-                else if (cl.Value is AutoClicker aclicker) data.autoClickerBonus += aclicker.allClickPower;
-                else if (cl.Value is OfflineClicker oclicker) data.offlineClickBonus += oclicker.allClickPower;
-                else
-                {
-                    UniversalClicker uclicker = cl.Value as UniversalClicker;
-                    data.clickBonus += uclicker.allClickPower;
-                    data.autoClickerBonus += uclicker.allClickPower * 5;
-                    data.offlineClickBonus += uclicker.allClickPower * 2;
-                }
-                data.clickersCount++;
+                autocliker.AutoClick();
+
+                await System.Threading.Tasks.Task.Delay(UnityEngine.Random.Range(400, 600));
             }
-        }
-
-        foreach (var cl in data?.clickers)
-        {
-            IAutocliker autoClicker = cl.Value as IAutocliker;
-            autoClicker?.AutoClick();
-
-            await System.Threading.Tasks.Task.Delay(Random.Range(400, 600));
         }
 
 
         void CheckForNull(GameData data)
         {
-            if (data.clickers == null) data.clickers = new Dictionary<string, Clicker>();
-            if (data.boosters == null) data.boosters = new Dictionary<string, Booster>();
-            if (data.specAmplifications == null) data.specAmplifications = new Dictionary<string, SpecialAmplification>();
+            if (data.products == null) data.products = new Dictionary<string, Product>();
             if (data.products == null) data.products = new Dictionary<string, Product>();
             if (data.timeToWinLeft == null) data.timeToWinLeft = 90f;
             if (data.enemySpawnStep == null) data.enemySpawnStep = 0.2f;
             if (data.dayStep == null) data.dayStep = 60f;
-            if (data.clickersCount == null) data.clickersCount = data.clickers.Count;
+        }
+        void CheckData(GameData data)
+        {
+            if (DateTime.TryParse(data.exitTime, out DateTime exitTime))
+            {
+                DateTime currentTime = DateTime.Now;
+                if (currentTime < exitTime) MyDebug.LogWarning("Перемотка времени detected");
+            }
         }
     }
 
@@ -133,18 +120,13 @@ public class GameDataManager : MonoBehaviour
     {
         if (!focus)
         {
-            foreach (var ocl in data?.clickers ?? null)
-            {
-                IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
-                offlineClicker?.RememberTime();
-            }
+            OfflineClicker.RememberTime();
         }
         else
         {
-            foreach (var ocl in data?.clickers ?? null)
+            foreach (var p in data.products)
             {
-                IOfflineClicker offlineClicker = ocl.Value as IOfflineClicker;
-                offlineClicker?.CalculateProduction();
+                if (p.Value is IOfflineClicker offlineClicker) offlineClicker.CalculateProduction();
             }
         }
 

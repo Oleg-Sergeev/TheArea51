@@ -8,16 +8,18 @@ public class UI : MonoBehaviour
     public static UI Instance;
     public Calendar calendar;
     public RectTransform langArrow, debugClickerMenu, scale;
-    public RectTransform[] descriptions;
+    public RectTransform[] descriptions, productsParent;
     public Sprite[] langSpritesArr;
     public Image currentLanguage, toggleSFX, buttonSFX, buttonScale, toggleScale, sliderFPS, sliderModifierColor, activePanelPointer, area51HpImage;
     public Slider sliderModifier, area51Hp;
     public Text soldiers, soldiersFull, aliensHearts, aliensHeartsFull, textOfflineClickerBonus, textAutoclickerBonus, textClickBonus,
         prestigeClickBonus, prestigeAutoclickerBonus, prestigeOfflineClickerBonus, prClicker, prAutoclicker, prOfflineClicker,
-        activePanelText, activeSection, prestige, prestigeLvl, gameVersion, debugLng;
+        activePanelText, activeSection, prestige, prestigeLvl, gameVersion, debugLng, debugMaxCount;
     public Text[] localizedTexts;
-    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, prestigeBttn, passwordInput;
-    public GameObject[] panelsArr, tutorials, modifiers;
+    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, prestigeBttn, passwordInput, separatorPrefab, bcgrPrefab;
+    public GameObject[] panelsArr, tutorials, modifiers, productsPrefab;
+    public static List<Type> productsCount;
+    private static Dictionary<string, ProductItem<Product>> products;
     private static Dictionary<string, ClickerItem<Clicker>> clickItems;
     private static Dictionary<string, BoosterItem<Booster>> boosterItems;
     private static Dictionary<string, SpecialAmplificationItem<SpecialAmplification>> specItems;
@@ -27,7 +29,13 @@ public class UI : MonoBehaviour
     private const string PASSWORD = "ZgTA51OV199";
 
 
-    private void Awake() => Instance = this;
+    private void Awake()
+    {
+        Instance = this;
+        productsCount = new List<Type>();
+
+        Check();
+    }
 
     private void Start()
     {
@@ -40,6 +48,8 @@ public class UI : MonoBehaviour
         #endregion
 
         #region Init
+        products = new Dictionary<string, ProductItem<Product>>();
+
         clickItems = new Dictionary<string, ClickerItem<Clicker>>();
         boosterItems = new Dictionary<string, BoosterItem<Booster>>();
         specItems = new Dictionary<string, SpecialAmplificationItem<SpecialAmplification>>();
@@ -79,26 +89,50 @@ public class UI : MonoBehaviour
             panels.Add(i.name, i);
             panels[i.name].SetActive(false);
         }
-        panels["Clickers"].SetActive(true);        
-
-        foreach(var clickerItem in ShopManager.clickerItems)
+        panels["Clickers"].SetActive(true);
+        
+        Type lastType = null;
+        int parentNum = 0;
+        foreach (var clickerItem in ShopManager.clickerItems)
         {
+            CheckToSeparate(clickerItem.Clicker.GetType());
+
+            Transform uiObject = CreateUIObject(productsPrefab[0]);
+
             clickerItem.Clicker = InitializeClicker(clickerItem.Clicker);
-            InitializeClickerInfo(new ClickerItem<Clicker>(clickerItem.uiInfo, clickerItem.Clicker), clickItems);
+            InitializeClickerInfo(new ClickerItem<Clicker>(clickerItem.uiInfo, clickerItem.Clicker), clickItems, uiObject);
+
+            products.Add(clickItems[clickerItem.Clicker.name].Clicker.name, new ProductItem<Product>(clickerItem.uiInfo, clickerItem.Clicker));
         }
+        parentNum++;
         foreach (var boosterItem in ShopManager.boosterItems)
         {
+            CheckToSeparate(boosterItem.Booster.GetType());
+
+            Transform uiObject = CreateUIObject(productsPrefab[1]);
+
             boosterItem.Booster = InitializeBooster(boosterItem.Booster);
-            InitializeBoosterInfo(new BoosterItem<Booster>(boosterItem.uiInfo, boosterItem.Booster), boosterItems);
+            InitializeBoosterInfo(new BoosterItem<Booster>(boosterItem.uiInfo, boosterItem.Booster), boosterItems, uiObject);
+
+            products.Add(boosterItems[boosterItem.Booster.name].Booster.name, new ProductItem<Product>(boosterItem.uiInfo, boosterItem.Booster));   
 
             if (boosterItem.Booster.IsUsing) boosterItem.Booster.Use();
         }
+        parentNum++;
         foreach (var specItem in ShopManager.specAmplificationItems)
         {
+            CheckToSeparate(specItem.SpecAmplification.GetType());
+
+            Transform uiObject = CreateUIObject(productsPrefab[2]);
+
             specItem.SpecAmplification = InitializeSpecialAmplification(specItem.SpecAmplification);
-            InitializeSpecialAmplificationInfo(new SpecialAmplificationItem<SpecialAmplification>(specItem.uiInfo, specItem.SpecAmplification), specItems);
+            InitializeSpecialAmplificationInfo(new SpecialAmplificationItem<SpecialAmplification>(specItem.uiInfo, specItem.SpecAmplification), specItems, uiObject);
+
+            products.Add(specItems[specItem.SpecAmplification.name].SpecAmplification.name, new ProductItem<Product>(specItem.uiInfo, specItem.SpecAmplification));
         }
 
+        foreach (var d in descriptions) d.SetAsLastSibling();
+        
         if (GameDataManager.data.debugEnabled)
         {
             debugButtons.SetActive(true);
@@ -143,16 +177,16 @@ public class UI : MonoBehaviour
         FPS(GameDataManager.data.fps);
 
         OnChangeText();
-
+        
 
         T InitializeClicker<T>(T clicker) where T : Clicker
         {
             T savedClicker = null;
             Type type = null;
 
-            if (GameDataManager.data.clickers.ContainsKey(clicker.name))
+            if (GameDataManager.data.products.ContainsKey(clicker.name))
             {
-                savedClicker = GameDataManager.data.clickers[clicker.name] as T;
+                savedClicker = GameDataManager.data.products[clicker.name] as T;
                 type = typeof(T);
             }
             else
@@ -217,9 +251,9 @@ public class UI : MonoBehaviour
         {
             T savedBooster = null;
 
-            if (GameDataManager.data.boosters.ContainsKey(booster.name))
+            if (GameDataManager.data.products.ContainsKey(booster.name))
             {
-                savedBooster = GameDataManager.data.boosters[booster.name] as T;
+                savedBooster = GameDataManager.data.products[booster.name] as T;
             }
             else
             {
@@ -243,9 +277,9 @@ public class UI : MonoBehaviour
         {
             T savedAmplification = null;
 
-            if (GameDataManager.data.specAmplifications.ContainsKey(amplification.name))
+            if (GameDataManager.data.products.ContainsKey(amplification.name))
             {
-                savedAmplification = GameDataManager.data.specAmplifications[amplification.name] as T;
+                savedAmplification = GameDataManager.data.products[amplification.name] as T;
             }
             else
             {
@@ -289,23 +323,30 @@ public class UI : MonoBehaviour
             return savedAmplification;
         }
 
-        void InitializeClickerInfo<T>(T clickerItem, Dictionary<string, T> clickerItems) where T : ClickerItem<Clicker>
+        void InitializeClickerInfo<T>(T clickerItem, Dictionary<string, T> clickerItems, Transform uiObject) where T : ClickerItem<Clicker>
         {
             var clicker = clickerItem.Clicker;
 
+            clickerItem.uiInfo.uiObject = uiObject;
+
             InitializeShopInfo(clickerItem.uiInfo);
+
             clickerItem.uiInfo.level = clickerItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
             clickerItem.uiInfo.clickPower = clickerItem.uiInfo.uiObject.GetChild(5).GetComponent<Text>();
 
             clickerItems.Add(clicker.name, clickerItem);
 
-            clickerItems[clicker.name].uiInfo.name.name = clicker.name;
+            ProductItem<Product> productItem = new ProductItem<Product>(clickerItem.uiInfo, clickerItem.Clicker);
 
-            clickerItems[clicker.name].uiInfo.avatarImage.sprite = clickerItem.uiInfo.avatar;
-            clickerItems[clicker.name].uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
+            InitializeProductInfo(productItem);
+
+            //clickerItems[clicker.name].uiInfo.name.name = clicker.name;
+
+            //clickerItems[clicker.name].uiInfo.avatarImage.sprite = clickerItem.uiInfo.avatar;
+            //clickerItems[clicker.name].uiInfo.name.text = LanguageManager.GetLocalizedText(clickerItem.uiInfo.name.name);
             clickerItems[clicker.name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {clicker.level}";
             clickerItems[clicker.name].uiInfo.price.text = FormatMoney(clicker.currentPrice);
-            clickerItems[clicker.name].uiInfo.currency.sprite = Resources.Load<Sprite>(clickerItems[clicker.name].Clicker.currency.ToString());
+            //clickerItems[clicker.name].uiInfo.currency.sprite = Resources.Load<Sprite>(clickerItems[clicker.name].Clicker.currency.ToString());
             if (!(clicker is UniversalClicker))
             {
                 string key = clicker is ManualClicker ? "Click" : "Sec";
@@ -320,7 +361,7 @@ public class UI : MonoBehaviour
             }
         }
 
-        void InitializeBoosterInfo<T>(T boosterItem, Dictionary<string, T> boosterItems) where T : BoosterItem<Booster>
+        void InitializeBoosterInfo<T>(T boosterItem, Dictionary<string, T> boosterItems, Transform uiObject) where T : BoosterItem<Booster>
         {
             var booster = boosterItem.Booster;
 
@@ -330,7 +371,10 @@ public class UI : MonoBehaviour
                 ability = booster is DefenceBooster ? $"{booster.abilityModifier * 100}%" : $"{booster.abilityModifier * 60}/{LanguageManager.GetLocalizedText("S")}";
             }
 
+            boosterItem.uiInfo.uiObject = uiObject;
+
             InitializeShopInfo(boosterItem.uiInfo);
+
             boosterItem.uiInfo.amount = boosterItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
             boosterItem.uiInfo.use = boosterItem.uiInfo.uiObject.GetChild(5).GetChild(1).GetComponent<Text>();
             boosterItem.uiInfo.functional = boosterItem.uiInfo.uiObject.GetChild(5).GetChild(2).GetComponent<Text>();
@@ -343,35 +387,46 @@ public class UI : MonoBehaviour
 
             boosterItems.Add(booster.name, boosterItem);
 
-            boosterItems[booster.name].uiInfo.name.name = booster.name;
+            ProductItem<Product> productItem = new ProductItem<Product>(boosterItem.uiInfo, boosterItem.Booster);
 
-            boosterItems[booster.name].uiInfo.avatarImage.sprite = boosterItem.uiInfo.avatar;
-            boosterItems[booster.name].uiInfo.name.text = LanguageManager.GetLocalizedText(boosterItem.uiInfo.name.name);
+            InitializeProductInfo(productItem);
+
+            //boosterItems[booster.name].uiInfo.name.name = booster.name;
+
+            //boosterItems[booster.name].uiInfo.avatarImage.sprite = boosterItem.uiInfo.avatar;
+            //boosterItems[booster.name].uiInfo.name.text = LanguageManager.GetLocalizedText(boosterItem.uiInfo.name.name);
             boosterItems[booster.name].uiInfo.amount.text = $"{booster.amount}x";
             boosterItems[booster.name].uiInfo.functional.text = $"{LanguageManager.GetLocalizedText(booster.GetType().ToString())} {ability} - {booster.useTime}{LanguageManager.GetLocalizedText("Sec")}";
             boosterItems[booster.name].uiInfo.use.text = LanguageManager.GetLocalizedText("Use");
-            boosterItems[booster.name].uiInfo.price.text = booster.priceDefault.ToString();
-            boosterItems[booster.name].uiInfo.currency.sprite = Resources.Load<Sprite>(boosterItems[booster.name].Booster.currency.ToString());
+            boosterItems[booster.name].uiInfo.price.text = FormatMoney(booster.priceDefault);
+            //boosterItems[booster.name].uiInfo.currency.sprite = Resources.Load<Sprite>(boosterItems[booster.name].Booster.currency.ToString());
             if (booster is IDefendBooster defendBooster) defendBooster.CheckAvailabilityUse();
         }
 
-        void InitializeSpecialAmplificationInfo<T>(T specItem, Dictionary<string, T> specItems) where T : SpecialAmplificationItem<SpecialAmplification>
+        void InitializeSpecialAmplificationInfo<T>(T specItem, Dictionary<string, T> specItems, Transform uiObject) where T : SpecialAmplificationItem<SpecialAmplification>
         {
             var specAmplif = specItem.SpecAmplification;
 
+            specItem.uiInfo.uiObject = uiObject;
+
             InitializeShopInfo(specItem.uiInfo);
+
             specItem.uiInfo.level = specItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
             specItem.uiInfo.modifierValue = specItem.uiInfo.uiObject.GetChild(5).GetComponent<Text>();
 
             specItems.Add(specAmplif.name, specItem);
 
-            specItems[specAmplif.name].uiInfo.name.name = specAmplif.name;
+            ProductItem<Product> productItem = new ProductItem<Product>(specItem.uiInfo, specItem.SpecAmplification);
 
-            specItems[specAmplif.name].uiInfo.avatarImage.sprite = specItem.uiInfo.avatar;
-            specItems[specAmplif.name].uiInfo.name.text = LanguageManager.GetLocalizedText(specItem.uiInfo.name.name);
+            InitializeProductInfo(productItem);
+
+            //specItems[specAmplif.name].uiInfo.name.name = specAmplif.name;
+
+            //specItems[specAmplif.name].uiInfo.avatarImage.sprite = specItem.uiInfo.avatar;
+            //specItems[specAmplif.name].uiInfo.name.text = LanguageManager.GetLocalizedText(specItem.uiInfo.name.name);
             specItems[specAmplif.name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {specAmplif.level}";
             specItems[specAmplif.name].uiInfo.price.text = FormatMoney(specAmplif.currentPrice);
-            specItems[specAmplif.name].uiInfo.currency.sprite = Resources.Load<Sprite>(specItems[specAmplif.name].SpecAmplification.currency.ToString());
+            //specItems[specAmplif.name].uiInfo.currency.sprite = Resources.Load<Sprite>(specItems[specAmplif.name].SpecAmplification.currency.ToString());
             specItems[specAmplif.name].uiInfo.modifierValue.text = $"+{specAmplif.defaultModifierValue * 100}%";
         }
 
@@ -382,9 +437,72 @@ public class UI : MonoBehaviour
             shopItem.name = shopItem.uiObject.GetChild(2).GetComponent<Text>();
             shopItem.price = shopItem.uiObject.GetChild(4).GetComponent<Text>();
             shopItem.currency = shopItem.uiObject.GetChild(6).GetComponent<Image>();
+
+            shopItem.bttnBuy.onClick.AddListener(() => SFX("Button"));
+            shopItem.bttnBuy.onClick.AddListener(() => BuyProduct(shopItem.name));
+
+            shopItem.avatarImage.GetComponent<Button>().onClick.AddListener(() => ShowDescription(shopItem.name));
+        }
+
+        void InitializeProductInfo(ProductItem<Product> productItem)
+        {
+            productItem.uiInfo.name.name = productItem.Product.name;
+            productItem.uiInfo.name.text = LanguageManager.GetLocalizedText(productItem.uiInfo.name.name);
+            productItem.uiInfo.avatarImage.sprite = productItem.uiInfo.avatar;
+            productItem.uiInfo.currency.sprite = Resources.Load<Sprite>(productItem.Product.currency.ToString());
+        }
+
+        void CheckToSeparate(Type productType)
+        {
+            if (!productsCount.Contains(productType)) return;
+
+            if (lastType != productType)
+            {
+                GameObject prefab = Instantiate(separatorPrefab) as GameObject;
+
+                prefab.transform.SetParent(productsParent[parentNum]);
+                prefab.transform.localScale = new Vector3(1, 1, 1);
+
+                var section = prefab.transform.GetChild(1).GetComponent<Text>();
+
+                section.name += $"{productType.ToString()}s";
+                section.text = LanguageManager.GetLocalizedText(section.name);
+
+                Text[] temp = new Text[localizedTexts.Length + 1];
+                for (int i = 0; i < localizedTexts.Length; i++) temp[i] = localizedTexts[i];
+                temp[temp.Length - 1] = section;
+                localizedTexts = temp;
+
+                lastType = productType;
+            }
+        }
+
+        Transform CreateUIObject(GameObject productPrefab)
+        {
+            GameObject uiObject = Instantiate(productPrefab) as GameObject;
+
+            uiObject.transform.SetParent(productsParent[parentNum]);
+            uiObject.transform.localScale = new Vector3(1, 1, 1);
+
+            return uiObject.transform;
         }
     }
+    //
+    int clickCount = 0;
+    int maxClickCount = (int)(1 / 0.02f) / 2;
 
+    async void Check()
+    {
+        while (Application.isPlaying)
+        {
+            await System.Threading.Tasks.Task.Delay(1000);
+            
+            if (clickCount > maxClickCount) MyDebug.LogWarning("Pressing too often");
+
+            clickCount = 0;
+        }
+    }
+    //
     public static T GetProduct<T>(string name) where T : Product
     {
         if (clickItems.ContainsKey(name))
@@ -457,6 +575,7 @@ public class UI : MonoBehaviour
 
     public void Click()
     {
+        clickCount++;
         EventManager.eventManager.Click(GameDataManager.data.clickBonus);
         IncreaseSpeed();
     }
@@ -616,7 +735,7 @@ public class UI : MonoBehaviour
     }
 
     #region Modifier
-    private float speed = 0, speedAcceleration = 0.00075f, speedLimit = 0.0035f, timer = 0.2f;
+    private float speed = 0, speedAcceleration = 0.0003f, speedLimit = 0.01f, timer = 0.2f;
 
     public void OnChangeValue()
     {
@@ -925,7 +1044,7 @@ public class UI : MonoBehaviour
     public void BuyProduct(Text name)
     {
         Product product = GetProduct<Product>(name.name);
-
+        
         EventManager.eventManager.Buy(product, (bool success) =>
         {
             if (success)
@@ -1217,25 +1336,19 @@ public class UI : MonoBehaviour
         bool wasTutorial = data.wasTutorial;
         bool inversedScale = data.inversedScale;
 
+        List<Product> products = new List<Product>();
         List<Clicker> clickers = new List<Clicker>();
         List<Booster> boosters = new List<Booster>();
         List<SpecialAmplification> specs = new List<SpecialAmplification>();
 
-        foreach (var cl in data.clickers)
+        foreach (var p in data.products)
         {
-            if (cl.Value is AutoClicker ac) ac.hasStart = false;
-            else if (cl.Value is UniversalClicker uc) uc.hasStart = false;
+            if (p.Value is AutoClicker) Product.DownCast<AutoClicker>(p.Value).hasStart = false;
+            else if (p.Value is UniversalClicker) Product.DownCast<UniversalClicker>(p.Value).hasStart = false;
 
-            if (cl.Value.currency == Currency.AlienHeart) clickers.Add(cl.Value);
-        }
-        foreach (var b in data.boosters)
-        {
-            if (b.Value.currency == Currency.AlienHeart) boosters.Add(b.Value);
-            b.Value.useTimeRemained = 0;
-        }
-        foreach(var s in data.specAmplifications)
-        {
-            if (s.Value.currency == Currency.AlienHeart) specs.Add(s.Value);
+            if (p.Value is Booster booster) Product.DownCast<Booster>(p.Value).useTimeRemained = 0;
+
+            if (p.Value.currency == Currency.AlienHeart) products.Add(p.Value);
         }
 
         data = new GameData();
@@ -1255,34 +1368,30 @@ public class UI : MonoBehaviour
         data.wasTutorial = wasTutorial;
         data.inversedScale = inversedScale;
 
-        foreach (var b in boosters) data.boosters.Add(b.name, b);
-        foreach (var cl in clickers)
+        foreach (var p in products)
         {
-            if (cl is ManualClicker mclicker) clickBonus += mclicker.allClickPower;
-            else if (cl is AutoClicker aclicker) autoclickerBonus += aclicker.allClickPower;
-            else if (cl is OfflineClicker oclicker) offlineClickerBonus += oclicker.allClickPower;
-            else if (cl is UniversalClicker uclicker)
+            if (p is Clicker)
             {
-                clickBonus += uclicker.allClickPower;
-                autoclickerBonus += uclicker.allClickPower * 5;
-                offlineClickerBonus += uclicker.allClickPower * 5;
+                if (p is ManualClicker mclicker) clickBonus += mclicker.allClickPower;
+                else if (p is AutoClicker aclicker) autoclickerBonus += aclicker.allClickPower;
+                else if (p is OfflineClicker oclicker) offlineClickerBonus += oclicker.allClickPower;
+                else if (p is UniversalClicker uclicker)
+                {
+                    clickBonus += uclicker.allClickPower;
+                    autoclickerBonus += uclicker.allClickPower * 5;
+                    offlineClickerBonus += uclicker.allClickPower * 5;
+                }
             }
+            else if (p is SpecialAmplification sa) timerIncreasingValue += sa.modifierValue;
 
-            data.clickers.Add(cl.name, cl);
+            data.products.Add(p.name, p);
         }
-        foreach (var s in specs)
-        {
-            data.specAmplifications.Add(s.name, s);
-            timerIncreasingValue += s.modifierValue;
-        }
-
+    
         data.clickBonus = clickBonus;
         data.autoClickerBonus = autoclickerBonus;
         data.offlineClickBonus = offlineClickerBonus;
 
         data.timerIncreasingValue = timerIncreasingValue;
-
-        data.clickersCount = clickers.Count;
 
         GameDataManager.data = data;
 
@@ -1361,6 +1470,12 @@ public class UI : MonoBehaviour
         {
             NextDay();
         }
+    }
+
+    public void ChangeMaxClickCount(Slider slider)
+    {
+        maxClickCount = (int)slider.value;
+        debugMaxCount.text = maxClickCount.ToString();
     }
 
     public void OnLowMemory()

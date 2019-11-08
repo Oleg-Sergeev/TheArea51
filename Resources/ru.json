@@ -472,7 +472,7 @@
         },
 
         {
-            "key": "SectionClickers",
+            "key": "SectionManualClickers",
             "value": "Ручные кликеры"
         },
         {
@@ -496,12 +496,20 @@
             "value": "Усиления солдат"
         },
         {
+            "key": "SectionRegenBoosters",
+            "value": "Усиления регенерации"
+        },
+        {
+            "key": "SectionInstantHealthBoosters",
+            "value": "Усиления мгновенного лечения"
+        },
+        {
             "key": "SectionDefenceBoosters",
             "value": "Усиления защиты"
         },
         {
-            "key": "SectionSpecialAmplifications",
-            "value": "Особые усиления"
+            "key": "SectionTimeSoldierModifiers",
+            "value": "Улучшения шкалы солдат"
         },
         {
             "key": "Clickers",

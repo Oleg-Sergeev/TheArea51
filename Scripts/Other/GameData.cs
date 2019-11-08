@@ -18,7 +18,6 @@ public class GameData
         prestigeLvl = 0;
         fps = 60;
         leapCounter = 3;
-        clickersCount = 0;
         language = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         number = "27";
         month = "June";
@@ -32,14 +31,11 @@ public class GameData
         hasLost = false;
         hasRevertPrestige = false;
         inversedScale = false;
-        clickers = new Dictionary<string, Clicker>();
-        boosters = new Dictionary<string, Booster>();
-        specAmplifications = new Dictionary<string, SpecialAmplification>();
+        products = new Dictionary<string, Product>();
     }
     
     public float? enemySpawnStep, timeToWinLeft, dayStep;
     public float modifierValue, timerIncreasingValue;
-    public int? clickersCount;
     public int soldiersCount, aliensHearts, clickBonus, autoClickerBonus, offlineClickBonus, fps, leapCounter, maxHp, prestigeLvl;
     public string language, number, month, year, exitTime, passwordDebug;
     public bool enableSFX, wasTutorial, wasAttack, isDefend, hasLost, hasRevertPrestige, debugEnabled, inversedScale;
