@@ -379,6 +379,10 @@
             "value": "Upgrade"
         },
         {
+            "key": "Upgrading",
+            "value": "Upgrading"
+        },
+        {
             "key": "TimeBooster",
             "value": "Time boost"
         },
@@ -431,6 +435,10 @@
             "value": "Inverse scale"
         },
         {
+            "key": "Open",
+            "value": "Open"
+        },
+        {
             "key": "Fps",
             "value": "Fps"
         },
@@ -477,6 +485,10 @@
         {
             "key": "RevertPrestige",
             "value": "Revert prestige"
+        },
+        {
+            "key": "YourPresent",
+            "value": "Your present:"
         },
 
         {

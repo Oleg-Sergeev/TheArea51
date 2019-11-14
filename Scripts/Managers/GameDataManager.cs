@@ -46,9 +46,11 @@ public class GameDataManager : MonoBehaviour
             if (data.timeToWinLeft == null) data.timeToWinLeft = 90f;
             if (data.enemySpawnStep == null) data.enemySpawnStep = 0.2f;
             if (data.dayStep == null) data.dayStep = 60f;
+            if (data.giftTimer == default) data.giftTimer = new GiftTimer(60, 0);
         }
         void CheckData(GameData data)
         {
+            MyDebug.Log("Проверка времени...");
             if (DateTime.TryParse(data.exitTime, out DateTime exitTime))
             {
                 DateTime currentTime = DateTime.Now;
@@ -69,7 +71,7 @@ public class GameDataManager : MonoBehaviour
 
         PoolManager.Instance.CreatePools();
 
-        data.isDefend = true;       
+        data.isDefend = true;
     }
 
     public static void OnHpChange(int hp)

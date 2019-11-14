@@ -15,7 +15,7 @@ public class ContentSizeControl : MonoBehaviour
         else if (HasComponent<GridLayoutGroup>(gameObject)) glg = GetComponent<GridLayoutGroup>();
         else
         {
-            MyDebug.LogError($"gameobject {name} does not have any required component");
+            MyDebug.LogError($"Gameobject {name} does not have any required component");
             return;
         }
 

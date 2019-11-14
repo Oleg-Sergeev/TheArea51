@@ -379,6 +379,10 @@
             "value": "Улучшить"
         },
         {
+            "key": "Upgrading",
+            "value": "Улучшение"
+        },
+        {
             "key": "TimeBooster",
             "value": "Ускорение времени"
         },
@@ -431,6 +435,10 @@
             "value": "Инверсия шкалы"
         },
         {
+            "key": "Open",
+            "value": "Открыть"
+        },
+        {
             "key": "Fps",
             "value": "Fps"
         },
@@ -469,6 +477,10 @@
         {
             "key": "RevertPrestige",
             "value": "Отклонить престиж"
+        },
+        {
+            "key": "YourPresent",
+            "value": "Ваш подарок:"
         },
 
         {

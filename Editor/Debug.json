@@ -1,9 +1,9 @@
 {
     "modifierValue": 0.0,
     "timerIncreasingValue": 0.0,
-    "soldiersCount": 14369,
-    "aliensHearts": 0,
-    "clickBonus": 1,
+    "soldiersCount": 145614,
+    "aliensHearts": 212,
+    "clickBonus": 14,
     "autoClickerBonus": 0,
     "offlineClickBonus": 0,
     "fps": 60,
@@ -11,10 +11,10 @@
     "maxHp": 0,
     "prestigeLvl": 0,
     "language": "ru",
-    "number": "28",
+    "number": "27",
     "month": "June",
     "year": "2019",
-    "exitTime": "08.11.2019 17:16:26",
+    "exitTime": "14.11.2019 21:14:40",
     "passwordDebug": "ZgTA51OV199",
     "enableSFX": true,
     "wasTutorial": true,
@@ -22,6 +22,7 @@
     "isDefend": false,
     "hasLost": false,
     "hasRevertPrestige": false,
-    "debugEnabled": true,
-    "inversedScale": false
+    "debugEnabled": false,
+    "inversedScale": false,
+    "giftTimer": {}
 }

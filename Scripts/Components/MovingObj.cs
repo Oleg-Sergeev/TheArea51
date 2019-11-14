@@ -32,18 +32,24 @@ public static class MovingObjList
 public class MovingObj : MonoBehaviour
 {
     public Vector2 defaultTarget, minimalDistance = new Vector2(1,1);
+    [HideInInspector] public Vector2 startPos;
     public float defaultSpeed = 1;
     public bool hideOnAwake = true;
-    [HideInInspector] public Vector2 startPos;
-
     private bool isRunning;
 
 
-    private void Awake()
+    private async void Awake()
     {
         MovingObjList.AddObj(this);
         startPos = transform.localPosition;
-        gameObject.SetActive(!hideOnAwake);
+
+        MovingObj obj = this;
+
+        await Task.Delay(1);
+
+        if (obj == null) return;
+
+        obj?.gameObject?.SetActive(!hideOnAwake);
     }
 
     public void MoveToTarget(Vector2 newTarget = default, float newSpeed = default, Action<GameObject> onEnd = default)

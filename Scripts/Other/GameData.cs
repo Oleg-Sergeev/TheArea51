@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 
 [System.Serializable]
 public class GameData
@@ -32,14 +33,17 @@ public class GameData
         hasRevertPrestige = false;
         inversedScale = false;
         products = new Dictionary<string, Product>();
+        giftTimer = new GiftTimer(60, 0);
     }
-    
+
+    public DateTime calendar;
     public float? enemySpawnStep, timeToWinLeft, dayStep;
     public float modifierValue, timerIncreasingValue;
     public int soldiersCount, aliensHearts, clickBonus, autoClickerBonus, offlineClickBonus, fps, leapCounter, maxHp, prestigeLvl;
     public string language, number, month, year, exitTime, passwordDebug;
     public bool enableSFX, wasTutorial, wasAttack, isDefend, hasLost, hasRevertPrestige, debugEnabled, inversedScale;
-
+    public GiftTimer giftTimer;
+    public Dictionary<Currency, int> currencies;
     public Dictionary<string, Product> products;
     public Dictionary<string, Clicker> clickers;
     public Dictionary<string, Booster> boosters;
