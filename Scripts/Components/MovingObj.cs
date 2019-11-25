@@ -62,13 +62,13 @@ public class MovingObj : MonoBehaviour
         Move(startPos, newSpeed, onEnd);
     }
 
-    private async void Move(Vector2 newTarget, float newSpeed, Action<GameObject> onEnd)
+    private async void Move(Vector2 target, float newSpeed, Action<GameObject> onEnd)
     {
         isRunning = false;
         await Task.Yield();
         isRunning = true;
         
-        Vector2 currentTarget = newTarget == default ? defaultTarget : newTarget;
+        Vector2 currentTarget = target == default ? defaultTarget : target;
         float currentSpeed = newSpeed == default ? defaultSpeed : newSpeed;
         float speed = currentSpeed / 5;
         while ((Vector2)transform.localPosition != currentTarget && isRunning)

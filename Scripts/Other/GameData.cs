@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 
-[System.Serializable]
+[Serializable]
 public class GameData
 {
     public GameData()
@@ -10,6 +10,8 @@ public class GameData
         timeToWinLeft = 90f;
         dayStep = 60f;
         timerIncreasingValue = 0f;
+        timerSkipKoef = 2.5f;
+        permanentSoldierModifier = 1;
         soldiersCount = 51;
         aliensHearts = 0;
         autoClickerBonus = 0;
@@ -32,16 +34,18 @@ public class GameData
         hasLost = false;
         hasRevertPrestige = false;
         inversedScale = false;
+        enableNotificaions = false;
         products = new Dictionary<string, Product>();
         giftTimer = new GiftTimer(60, 0);
     }
 
     public DateTime calendar;
-    public float? enemySpawnStep, timeToWinLeft, dayStep;
+    public float? enemySpawnStep, timeToWinLeft, dayStep, timerSkipKoef;
     public float modifierValue, timerIncreasingValue;
-    public int soldiersCount, aliensHearts, clickBonus, autoClickerBonus, offlineClickBonus, fps, leapCounter, maxHp, prestigeLvl;
+    public int SkipCost => (int)(giftTimer.Minute * timerSkipKoef);
+    public int soldiersCount, aliensHearts, clickBonus, autoClickerBonus, offlineClickBonus, fps, leapCounter, maxHp, prestigeLvl, prestigeAvatarIndex, permanentSoldierModifier;
     public string language, number, month, year, exitTime, passwordDebug;
-    public bool enableSFX, wasTutorial, wasAttack, isDefend, hasLost, hasRevertPrestige, debugEnabled, inversedScale;
+    public bool enableSFX, wasTutorial, wasAttack, isDefend, hasLost, hasRevertPrestige, debugEnabled, inversedScale, enableNotificaions;
     public GiftTimer giftTimer;
     public Dictionary<Currency, int> currencies;
     public Dictionary<string, Product> products;

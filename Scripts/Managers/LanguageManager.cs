@@ -31,7 +31,8 @@ public static class LanguageManager
 
     public static string GetLocalizedText(string key)
     {
-        if (!localizedText.ContainsKey(key)) return null;
+        if (localizedText == null || !localizedText.ContainsKey(key)) return null;
+
         return localizedText[key];
     }
 }

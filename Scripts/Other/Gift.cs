@@ -70,15 +70,15 @@ public class Gift : MonoBehaviour
                 break;
 
             case RewardTypes.ClickerUp:
-                EventManager.eventManager.Buy(UI.GetProduct<Clicker>(reward.name));
+                EventManager.eventManager.Buy(UI.GetProduct<Clicker>(reward.name), default, true);
                 break;
 
             case RewardTypes.BoosterUp:
-                EventManager.eventManager.Buy(UI.GetProduct<Booster>(reward.name));
+                EventManager.eventManager.Buy(UI.GetProduct<Booster>(reward.name), default, true);
                 break;
 
             case RewardTypes.SpecAmplifUp:
-                EventManager.eventManager.Buy(UI.GetProduct<SpecialAmplification>(reward.name));
+                EventManager.eventManager.Buy(UI.GetProduct<SpecialAmplification>(reward.name), default, true);
                 break;
         }
 
@@ -132,7 +132,7 @@ public class GiftTimer
 
             if (second < 0)
             {
-                second = 59;
+                second = 60 - Math.Abs(value);
                 Minute--;
             }
         }
@@ -152,6 +152,8 @@ public class GiftTimer
     [NonSerialized] private bool isRunning;
 
 
+    public override string ToString() => $"{Minute:D2}:{Second:D2}";
+
     public void Reset(int min = 60, int sec = 0)
     {
         Minute = min;
@@ -161,15 +163,28 @@ public class GiftTimer
     }
 
     public void Start() => Tick();
+    
+    public void DecreaseTime(int seconds)
+    {
+        if (seconds == -1 || seconds >= Second + Minute * 60)
+        {
+            Second = 0;
+            Minute = 0;
+            IsFinished = true;
+            return;
+        }
+        Second -= seconds % 60;
+        Minute -= seconds / 60;
+    }
 
     private async void Tick()
     {
         if (isRunning) return;
         isRunning = true;
         
-        while ((Minute > 0 || Second > 0) && Application.isPlaying)
+        while (!IsFinished && Application.isPlaying)
         {
-            await System.Threading.Tasks.Task.Delay((int)(1000 / Time.timeScale));
+            await System.Threading.Tasks.Task.Delay((int)(1000 / (Time.timeScale == 0 ? 1 : Time.timeScale)));
 
             DecreaseSecond();
 
@@ -185,6 +200,4 @@ public class GiftTimer
             if (Minute <= 0 && Second <= 0) IsFinished = true;
         }
     }
-
-    public override string ToString() => $"{Minute:D2}:{Second:D2}";
 }

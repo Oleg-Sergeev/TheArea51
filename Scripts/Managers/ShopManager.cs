@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Purchasing;
 
 public class ShopManager : MonoBehaviour
 {
@@ -15,16 +16,20 @@ public class ShopManager : MonoBehaviour
     public InstantHealthBoosterItem[] instantHealthBoosters;
     public DefenceBoosterItem[] defenceBoosters;
     public TimeSoldierModifierItem[] timeSoldierModifiers;
+    public PermanentSoldierBoostItem[] permamentSoldierBoosts;
+    public AlienHeartsItem[] alienHearts;
 
     public static List<ClickerItem<Clicker>> clickerItems;
     public static List<BoosterItem<Booster>> boosterItems;
     public static List<SpecialAmplificationItem<SpecialAmplification>> specAmplificationItems;
+    public static List<OfferItem<Offer>> offerItems;
 
     private void Awake()
     {
         clickerItems = new List<ClickerItem<Clicker>>();
         boosterItems = new List<BoosterItem<Booster>>();
         specAmplificationItems = new List<SpecialAmplificationItem<SpecialAmplification>>();
+        offerItems = new List<OfferItem<Offer>>();
 
         AddClickerToList(manualClickers);
         AddClickerToList(autoClickers);
@@ -36,6 +41,8 @@ public class ShopManager : MonoBehaviour
         AddBoosterToList(instantHealthBoosters);
         AddBoosterToList(defenceBoosters);
         AddSpecAmplificationToList(timeSoldierModifiers);
+        AddSpecAmplificationToList(permamentSoldierBoosts);
+        AddOfferToList(alienHearts);
 
         void AddClickerToList<T>(ClickerItem<T>[] clickerItemT) where T : Clicker
         {
@@ -49,7 +56,7 @@ public class ShopManager : MonoBehaviour
             UI.productsCount.Add(typeof(T));
 
         }
-        void AddBoosterToList<T>(BoosterItem<T>[] boosterItemT, bool addType = true) where T : Booster
+        void AddBoosterToList<T>(BoosterItem<T>[] boosterItemT) where T : Booster
         {
             foreach (var item in boosterItemT)
             {
@@ -60,7 +67,7 @@ public class ShopManager : MonoBehaviour
 
             UI.productsCount.Add(typeof(T));
         }
-        void AddSpecAmplificationToList<T>(SpecialAmplificationItem<T>[] specialAmplificationItemT, bool addType = true) where T : SpecialAmplification
+        void AddSpecAmplificationToList<T>(SpecialAmplificationItem<T>[] specialAmplificationItemT) where T : SpecialAmplification
         {
             foreach (var item in specialAmplificationItemT)
             {
@@ -71,14 +78,26 @@ public class ShopManager : MonoBehaviour
 
             UI.productsCount.Add(typeof(T));
         }
+        void AddOfferToList<T>(OfferItem<T>[] offerItemsT) where T : Offer
+        {
+            foreach (var item in offerItemsT)
+            {
+                OfferItem<Offer> offerItem = new OfferItem<Offer>(item.uiInfo, item.Product);
+
+                offerItems.Add(offerItem);
+            }
+
+            UI.productsCount.Add(typeof(T));
+        }
     }
 
     private void Start()
     {
         EventManager.eventManager.OnBuy += Buy;
+        IAPManager.OnSuccessfullPurchase += OnSuccessfullPurchase;
     }
     
-    private void Buy(Product product, Action<bool> success)
+    private void Buy(Product product, Action<bool> success, bool isFree = false)
     {
         if (product == null)
         {
@@ -107,13 +126,13 @@ public class ShopManager : MonoBehaviour
 
             if (data.isDefend)
             {
-                if (clicker.currency == Currency.Soldier) EventManager.eventManager.ChangeHp(-clicker.currentPrice);
-                else data.aliensHearts -= clicker.currentPrice;
+                if (clicker.currency == Currency.Soldier) EventManager.eventManager.ChangeHp(isFree ? -clicker.currentPrice : 0);
+                else data.aliensHearts -= !isFree ? clicker.currentPrice : 0;
             }
             else
             {
-                if (clicker.currency == Currency.Soldier) data.soldiersCount -= clicker.currentPrice;
-                else data.aliensHearts -= clicker.currentPrice;
+                if (clicker.currency == Currency.Soldier) data.soldiersCount -= !isFree ? clicker.currentPrice : 0;
+                else data.aliensHearts -= !isFree ? clicker.currentPrice : 0;
             }
 
             clicker.hasBought = true;
@@ -147,8 +166,8 @@ public class ShopManager : MonoBehaviour
         }
         else if (product is Booster booster)
         {
-            if (booster.currency == Currency.Soldier) data.soldiersCount -= booster.priceDefault;
-            else if (booster.currency == Currency.AlienHeart) data.aliensHearts -= booster.priceDefault;
+            if (booster.currency == Currency.Soldier) data.soldiersCount -= !isFree ? booster.priceDefault : 0;
+            else if (booster.currency == Currency.AlienHeart) data.aliensHearts -= !isFree ? booster.priceDefault : 0;
             else
             {
                 EventManager.eventManager.FinishBuy(product, false);
@@ -176,17 +195,33 @@ public class ShopManager : MonoBehaviour
                 return;
             }
 
-            data.aliensHearts -= modifier.currentPrice;
+            data.aliensHearts -= !isFree ? modifier.currentPrice : 0;
 
             modifier.level++;
 
-            modifier.currentPrice += (int)(modifier.priceDefault * ((float)modifier.level / 10));
+            if (modifier is PermanentSoldierBoost boost)
+            {
+                modifier.currentPrice += modifier.priceDefault + (int)(modifier.priceDefault * (float)modifier.level / 10);
+                Debug.Log($"{data.permanentSoldierModifier} {(int)modifier.modifierValue}");
+                data.permanentSoldierModifier = (int)modifier.modifierValue++;
+                Debug.Log($"{data.permanentSoldierModifier} {(int)modifier.modifierValue}");
+            }
+            else
+            {
+                modifier.currentPrice += (int)(modifier.priceDefault * ((float)modifier.level / 10));
 
-            data.timerIncreasingValue += modifier.defaultModifierValue;
+                data.timerIncreasingValue += modifier.defaultModifierValue;
+            }
 
             if (modifier.currentPrice < 0) modifier.currentPrice = int.MaxValue;
 
             if (!data.products.ContainsKey(modifier.name)) data.products.Add(modifier.name, modifier);
+        }
+        else if (product is Offer offer)
+        {
+            IAPManager.BuyConsumable(offer.productId);
+
+            return;
         }
         else
         {
@@ -203,12 +238,20 @@ public class ShopManager : MonoBehaviour
 
         SaveManager.Save(data);
     }
-}
 
-public enum Currency
-{
-    Soldier,
-    AlienHeart
+    private void OnSuccessfullPurchase(PurchaseEventArgs args)
+    {
+        MyDebug.Log($"Purchased {args.purchasedProduct.definition.id}");
+
+        if (args.purchasedProduct.definition.id.Contains("hearts"))
+        {
+            GameDataManager.data.aliensHearts += int.Parse(args.purchasedProduct.definition.id.Split(new char[] { '_' })[1]);
+
+            SFXManager.PlaySound(SoundTypes.Buy);
+
+            EventManager.eventManager.FinishBuy(null, true);
+        }
+    }
 }
 
 [Serializable] public abstract class Product
@@ -267,6 +310,13 @@ public enum Currency
 [Serializable] public class SpecialAmplificationShopItem : ShopItem
 {
     [HideInInspector] public Text level, modifierValue;
+}
+
+[Serializable] public class OfferShopItem : ShopItem
+{
+    public Sprite productIcon;
+    [HideInInspector] public Image productImage;
+    [HideInInspector] public Text productAmount;
 }
 
 [Serializable] public class ProductItem<T> where T : Product
@@ -381,11 +431,6 @@ public enum Currency
 
 [Serializable] public class OfflineClicker : Clicker, IOfflineClicker
 {
-    public static void RememberTime()
-    {
-        GameDataManager.data.exitTime = DateTime.Now.ToString();
-    }
-
     public void CalculateProduction()
     {
         if (GameDataManager.data.isDefend)
@@ -401,6 +446,7 @@ public enum Currency
         
         int totalProduction = offlineSecs * allClickPower;
         totalProduction += (int)(totalProduction * (GameDataManager.data.prestigeLvl * 0.1f));
+        totalProduction *= GameDataManager.data.permanentSoldierModifier;
         
         GameDataManager.data.soldiersCount += totalProduction;
     }
@@ -446,6 +492,7 @@ public enum Currency
 
         int totalProduction = offlineSecs * (int)(allClickPower * 1.5f);
         totalProduction += (int)(totalProduction * (GameDataManager.data.prestigeLvl * 0.1f));
+        totalProduction *= GameDataManager.data.permanentSoldierModifier;
 
         GameDataManager.data.soldiersCount += totalProduction;
     }
@@ -629,8 +676,12 @@ public enum Currency
 
     public void CheckAvailabilityUse()
     {
-        if (UI.GetProductItem<Booster>(name) is BoosterItem<Booster> boosterItem)
+        BoosterItem<Booster> boosterItem;
+        if (UI.TryGetProductItem(name, out ProductItem<Booster> productItem))
+        {
+            boosterItem = new BoosterItem<Booster>(productItem.uiInfo as BoosterShopItem, productItem.Product);
             boosterItem.uiInfo.bttnUse.interactable = GameDataManager.data.isDefend && !IsUsing && amount > 0;
+        }
     }
 
     public async override void Use()
@@ -671,8 +722,12 @@ public enum Currency
 {
     public void CheckAvailabilityUse()
     {
-        if (UI.GetProductItem<Booster>(name) is BoosterItem<Booster> boosterItem)
+        BoosterItem<Booster> boosterItem;
+        if (UI.TryGetProductItem(name, out ProductItem<Booster> productItem))
+        {
+            boosterItem = new BoosterItem<Booster>(productItem.uiInfo as BoosterShopItem, productItem.Product);
             boosterItem.uiInfo.bttnUse.interactable = GameDataManager.data.isDefend && !IsUsing && amount > 0;
+        }
     }
 
     public override string CurrentBoosterValue { get => currentBoosterValue = $"{abilityModifier}x"; set => currentBoosterValue = value; }
@@ -697,8 +752,12 @@ public enum Currency
 
     public void CheckAvailabilityUse()
     {
-        if (UI.GetProductItem<Booster>(name) is BoosterItem<Booster> boosterItem)
+        BoosterItem<Booster> boosterItem;
+        if (UI.TryGetProductItem(name, out ProductItem<Booster> productItem))
+        {
+            boosterItem = new BoosterItem<Booster>(productItem.uiInfo as BoosterShopItem, productItem.Product);
             boosterItem.uiInfo.bttnUse.interactable = GameDataManager.data.isDefend && !IsUsing && amount > 0;
+        }
     }
 
     public async override void Use()
@@ -746,10 +805,18 @@ public enum Currency
 }
 [Serializable] public class TimeSoldierModifierItem : SpecialAmplificationItem<TimeSoldierModifier>
 {
-    public TimeSoldierModifierItem(SpecialAmplificationShopItem uiInfo, TimeSoldierModifier specAmplification) : base(uiInfo, specAmplification)
+    public TimeSoldierModifierItem(SpecialAmplificationShopItem uiInfo, TimeSoldierModifier product) : base(uiInfo, product)
     {
         this.uiInfo = uiInfo;
-        this.product = specAmplification;
+        this.product = product;
+    }
+}
+[Serializable] public class PermanentSoldierBoostItem : SpecialAmplificationItem<PermanentSoldierBoost>
+{
+    public PermanentSoldierBoostItem(SpecialAmplificationShopItem uiInfo, PermanentSoldierBoost product) : base(uiInfo, product)
+    {
+        this.uiInfo = uiInfo;
+        this.product = product;
     }
 }
 
@@ -764,6 +831,50 @@ public enum Currency
 [Serializable] public class TimeSoldierModifier : SpecialAmplification
 {
 
+}
+
+[Serializable] public class PermanentSoldierBoost : SpecialAmplification
+{
+
+}
+
+
+[Serializable] public class OfferItem<T> : ProductItem<T> where T : Offer
+{
+    public new OfferShopItem uiInfo;
+
+    public OfferItem(OfferShopItem uiInfo, T product) : base(uiInfo, product)
+    {
+        this.uiInfo = uiInfo;
+        this.product = product;
+    }
+}
+[Serializable] public class AlienHeartsItem : OfferItem<AlienHearts>
+{
+    public AlienHeartsItem(OfferShopItem uiInfo, AlienHearts product) : base(uiInfo, product)
+    {
+        this.uiInfo = uiInfo;
+        this.product = product;
+    }
+}
+
+[Serializable] public abstract class Offer : Product
+{
+    public int productAmount;
+    public string productId;
+    public bool isConsumable = true;
+}
+
+[Serializable] public class AlienHearts : Offer
+{
+
+}
+
+public enum Currency
+{
+    Soldier,
+    AlienHeart,
+    Rub
 }
 
 public interface IAutocliker

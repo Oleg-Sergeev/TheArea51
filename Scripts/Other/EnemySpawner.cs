@@ -13,7 +13,6 @@ public class EnemySpawner
         while (GameDataManager.data.timeToWinLeft >= 0 && GameDataManager.data.isDefend)
         {
             PoolManager.Instance.Spawn(PoolType.Circle);
-            PoolManager.Instance.Spawn(PoolType.Rectangle);
 
             GameDataManager.data.timeToWinLeft -= GameDataManager.data.enemySpawnStep * UnityEngine.Time.timeScale;        
 

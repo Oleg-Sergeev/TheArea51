@@ -8,25 +8,25 @@ public class UI : MonoBehaviour
     public static UI Instance;
     public Calendar calendar;
     public GiftBlackout giftBlackout;
-    public RectTransform langArrow, debugClickerMenu, scale;
+    public RectTransform langArrow, debugClickerMenu, scale, medalInfoParent;
     public RectTransform[] descriptions, productsParent;
     public Sprite[] langSpritesArr, prestigeAvatars;
-    public Image currentLanguage, toggleSFX, buttonSFX, buttonScale, toggleScale, sliderFPS, sliderModifierColor, activePanelPointer, area51HpImage, prestigeImage, notify;
+    public Image currentLanguage, toggleSFX, buttonSFX, buttonScale, toggleScale, sliderFPS, buttonNotify, toggleNotify, sliderModifierColor, activePanelPointer, area51HpImage, prestigeImage, notify;
     public Slider sliderModifier, area51Hp;
-    public Button gift;
+    public Button gift, heartsSkip;
     public Text soldiers, soldiersFull, aliensHearts, aliensHeartsFull, textOfflineClickerBonus, textAutoclickerBonus, textClickBonus,
         prestigeClickBonus, prestigeAutoclickerBonus, prestigeOfflineClickerBonus, prClicker, prAutoclicker, prOfflineClicker,
         activePanelText, activeSection, prestige, gameVersion, debugLng, debugMaxCount, giftTimer;
     public Text[] localizedTexts;
-    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, prestigeBttn, passwordInput, separatorPrefab, bcgrPrefab;
+    public GameObject debugLog, debugModifier, debugButtons, intro, beforeStorm, activeNotesList, prestigeBttn, passwordInput, separatorPrefab, bcgrPrefab, medalInfoPrefab;
     public GameObject[] panelsArr, tutorials, modifiers, productsPrefab;
     public static List<Type> productsCount;
+    private List<Text> medalNames;
     private static Dictionary<string, ProductItem<Product>> products;
     private static Dictionary<string, GameObject> panels;
     private static Dictionary<string, Sprite> langSprites;
     private static readonly string[] languages = { "ru", "en" };
     private const string PASSWORD = "ZgTA51OV199";
-
 
     private void Awake()
     {
@@ -46,19 +46,18 @@ public class UI : MonoBehaviour
         EventManager.eventManager.OnTimer += OnGiftTimer;
         EventManager.eventManager.OnFinishBuy += OnFinishBuy;
         EventManager.eventManager.OnAnimationEnd += OnGiftOpen;
+        EventManager.eventManager.OnAdFinished += OnAdFinished;
         Application.lowMemory += OnLowMemory;
         #endregion
 
         #region Init
         products = new Dictionary<string, ProductItem<Product>>();
 
-        /*clickItems = new Dictionary<string, ClickerItem<Clicker>>();
-        boosterItems = new Dictionary<string, BoosterItem<Booster>>();
-        specItems = new Dictionary<string, SpecialAmplificationItem<SpecialAmplification>>();*/
-        
         panels = new Dictionary<string, GameObject>();
 
         langSprites = new Dictionary<string, Sprite>();
+
+        medalNames = new List<Text>();
 
         calendar.months = new Queue<string>(new string[]
         {
@@ -66,33 +65,32 @@ public class UI : MonoBehaviour
         });
         #endregion
 
+        foreach (var i in langSpritesArr) langSprites.Add(i.name, i);
+
+        ChangeLanguage(GameDataManager.data.language);
+
         #region Set
         gameVersion.text = $"v{Application.version}";
         
-        prestigeImage.sprite = prestigeAvatars[GameDataManager.data.prestigeLvl < prestigeAvatars.Length ? GameDataManager.data.prestigeLvl : prestigeAvatars.Length - 1];
+        prestigeImage.sprite = prestigeAvatars[GameDataManager.data.prestigeAvatarIndex];
+        prestigeImage.preserveAspect = true;
+
+        gift.interactable = GameDataManager.data.giftTimer.IsFinished;
+        giftTimer.text = gift.interactable ? LanguageManager.GetLocalizedText("Open") : GameDataManager.data.giftTimer.ToString();
+
+        heartsSkip.transform.GetChild(0).GetComponent<Text>().text = GameDataManager.data.SkipCost.ToString();
         #endregion
 
         prestigeBttn.SetActive(false);
 
         giftBlackout.SetActive(false);
 
-        foreach (var i in langSpritesArr)
-        {
-            langSprites.Add(i.name, i);
-        }
-
-        ChangeLanguage(GameDataManager.data.language);
-
         calendar.day.text = GameDataManager.data.number;
         calendar.month.text = LanguageManager.GetLocalizedText(GameDataManager.data.month);
         calendar.year.text = GameDataManager.data.year;
         calendar.SynchronizeDate();
 
-        gift.interactable = GameDataManager.data.giftTimer.IsFinished;
-
         Notify(gift.interactable);
-
-        giftTimer.text = gift.interactable ? LanguageManager.GetLocalizedText("Open") : GameDataManager.data.giftTimer.ToString();
 
         foreach (var i in panelsArr)
         {
@@ -109,29 +107,42 @@ public class UI : MonoBehaviour
             clickerItem.Product = InitializeClicker(clickerItem.Product);
             var item = InitializeClickerInfo(new ClickerItem<Clicker>(clickerItem.uiInfo, clickerItem.Product));
 
-            products.Add(clickerItem.Product.name, new ProductItem<Product>(item.uiInfo, item.Product));
+            products.Add(item.Product.name, new ProductItem<Product>(item.uiInfo, item.Product));
         }
-        /*foreach (var boosterItem in ShopManager.boosterItems)
+        foreach (var boosterItem in ShopManager.boosterItems)
         {
-            CheckToSeparate(boosterItem.Product.GetType());
+            CheckToSeparate(boosterItem.Product.GetType(), 1);
             
             boosterItem.Product = InitializeBooster(boosterItem.Product);
-            InitializeBoosterInfo(new BoosterItem<Booster>(boosterItem.uiInfo, boosterItem.Product), boosterItems);
 
-            products.Add(boosterItem.Product.name, new ProductItem<Product>(boosterItem.uiInfo, boosterItem.Product));   
+            var item = InitializeBoosterInfo(new BoosterItem<Booster>(boosterItem.uiInfo, boosterItem.Product));
 
-            if (boosterItem.Product.IsUsing) boosterItem.Product.Use();
+            products.Add(item.Product.name, new ProductItem<Product>(item.uiInfo, item.Product));
+
+            if (products[item.Product.name].Product is IDefendBooster defendBooster) defendBooster.CheckAvailabilityUse();
+
+            if (item.Product.IsUsing) item.Product.Use();
         }
         foreach (var specItem in ShopManager.specAmplificationItems)
         {
-            CheckToSeparate(specItem.Product.GetType());
+            CheckToSeparate(specItem.Product.GetType(), 2);
             
             specItem.Product = InitializeSpecialAmplification(specItem.Product);
 
-            InitializeSpecialAmplificationInfo(new SpecialAmplificationItem<SpecialAmplification>(specItem.uiInfo, specItem.Product), specItems);
+            var item = InitializeSpecialAmplificationInfo(new SpecialAmplificationItem<SpecialAmplification>(specItem.uiInfo, specItem.Product));
 
             products.Add(specItem.Product.name, new ProductItem<Product>(specItem.uiInfo, specItem.Product));
-        }*/
+        }
+        foreach (var offerItem in ShopManager.offerItems)
+        {
+            CheckToSeparate(offerItem.Product.GetType(), 3);
+
+            offerItem.Product = InitializeOffer(offerItem.Product);
+
+            var item = InitializeOfferInfo(new OfferItem<Offer>(offerItem.uiInfo, offerItem.Product));
+
+            products.Add(offerItem.Product.name, new ProductItem<Product>(offerItem.uiInfo, offerItem.Product));
+        }
 
         foreach (var d in descriptions) d.SetAsLastSibling();
         
@@ -174,54 +185,66 @@ public class UI : MonoBehaviour
             prestigeOfflineClickerBonus.gameObject.SetActive(true);
         }
 
+        for (int i = 0; i <= GameDataManager.data.prestigeLvl; i++)
+        {
+            CreateMedalInfo(medalInfoPrefab, medalInfoParent, i);
+        }
+        for (int i = GameDataManager.data.prestigeLvl + 1; i < prestigeAvatars.Length; i++)
+        {
+            MedalInfo medalInfo = CreateMedalInfo(medalInfoPrefab, medalInfoParent, i);
+
+            medalInfo.medalButton.interactable = false;
+        }
+
         SFX(true);
         InverseScale(true);
+        Notifications(true);
         FPS(GameDataManager.data.fps);
-
-        OnChangeText();
         
+        OnChangeText();
 
-        T InitializeClicker<T>(T clicker) where T : Clicker
+
+        T InitializeClicker<T>(T defaultClicker) where T : Clicker
         {
             T savedClicker = null;
             Type type = null;
 
-            if (GameDataManager.data.products.ContainsKey(clicker.name))
+            if (GameDataManager.data.products.ContainsKey(defaultClicker.name))
             {
-                savedClicker = GameDataManager.data.products[clicker.name] as T;
+                savedClicker = GameDataManager.data.products[defaultClicker.name] as T;
                 type = typeof(T);
             }
             else
             {
-                savedClicker = clicker;
+                savedClicker = defaultClicker;
                 savedClicker.currentPrice = savedClicker.priceDefault;
             }
 
-            if (clicker.priceDefault != savedClicker.priceDefault)
+            if (defaultClicker.priceDefault != savedClicker.priceDefault)
             {
                 int level = 0;
-                int price = clicker.priceDefault;
+                int price = defaultClicker.priceDefault;
                 for (int x = 0; x < savedClicker.level; x++)
                 {
-                    price += (clicker.priceDefault / 2) + (clicker.priceDefault * level);
+                    price += (defaultClicker.priceDefault / 2) + (defaultClicker.priceDefault * level);
                     level++;
                 }
-                clicker.currentPrice = price;
-                MyDebug.LogWarning($"{clicker.name}'s price has changed: {savedClicker.currentPrice} -> {clicker.currentPrice}");
-                savedClicker.currentPrice = clicker.currentPrice;
+                defaultClicker.currentPrice = price;
+                MyDebug.LogWarning($"{defaultClicker.name}'s price has changed: {savedClicker.currentPrice} -> {defaultClicker.currentPrice}");
+                savedClicker.currentPrice = defaultClicker.currentPrice;
 
-                savedClicker.priceDefault = clicker.priceDefault;
+                savedClicker.priceDefault = defaultClicker.priceDefault;
             }
-            if (clicker.clickPowerDefault != savedClicker.clickPowerDefault)
+            if (defaultClicker.clickPowerDefault != savedClicker.clickPowerDefault)
             {
                 int allClickPower = 0;
                 for (int x = 0; x < savedClicker.level; x++)
                 {
-                    allClickPower += clicker.clickPowerDefault;
+                    allClickPower += defaultClicker.clickPowerDefault;
                 }
-                MyDebug.LogWarning($"{clicker.name}'s click power has changed: {savedClicker.allClickPower} -> {allClickPower}");
+                MyDebug.LogWarning($"{defaultClicker.name}'s click power has changed: {savedClicker.allClickPower} -> {allClickPower}");
 
-                savedClicker.clickPowerDefault = clicker.clickPowerDefault;
+                savedClicker.clickPowerDefault = defaultClicker.clickPowerDefault;
                 if (type == typeof(ManualClicker) || type == typeof(UniversalClicker))
                 {
                     GameDataManager.data.clickBonus -= savedClicker.allClickPower;
@@ -241,88 +264,111 @@ public class UI : MonoBehaviour
                     GameDataManager.data.offlineClickBonus += savedClicker.allClickPower;
                 }
             }
-            if (clicker.currency != savedClicker.currency)
+            if (defaultClicker.currency != savedClicker.currency)
             {
-                savedClicker.currency = clicker.currency;
+                savedClicker.currency = defaultClicker.currency;
             }
 
             return savedClicker;
         }
 
-        T InitializeBooster<T>(T booster) where T : Booster
+        T InitializeBooster<T>(T defaultBooster) where T : Booster
         {
             T savedBooster = null;
 
-            if (GameDataManager.data.products.ContainsKey(booster.name))
+            if (GameDataManager.data.products.ContainsKey(defaultBooster.name))
             {
-                savedBooster = GameDataManager.data.products[booster.name] as T;
+                savedBooster = GameDataManager.data.products[defaultBooster.name] as T;
             }
             else
             {
-                savedBooster = booster;
+                savedBooster = defaultBooster;
                 savedBooster.useTimeRemained = savedBooster.useTime;
             }
 
-            if (booster.priceDefault != savedBooster.priceDefault) savedBooster.priceDefault = booster.priceDefault;
-            if (booster.currency != savedBooster.currency) savedBooster.currency = booster.currency;
-            if (booster.abilityModifier != savedBooster.abilityModifier) savedBooster.abilityModifier = booster.abilityModifier;
-            if (booster.useTime != savedBooster.useTime)
+            if (defaultBooster.priceDefault != savedBooster.priceDefault) savedBooster.priceDefault = defaultBooster.priceDefault;
+            if (defaultBooster.currency != savedBooster.currency) savedBooster.currency = defaultBooster.currency;
+            if (defaultBooster.abilityModifier != savedBooster.abilityModifier) savedBooster.abilityModifier = defaultBooster.abilityModifier;
+            if (defaultBooster.useTime != savedBooster.useTime)
             {
-                savedBooster.useTime = booster.useTime;
-                savedBooster.useTimeRemained = booster.useTime;
+                savedBooster.useTime = defaultBooster.useTime;
+                savedBooster.useTimeRemained = defaultBooster.useTime;
             }
 
             return savedBooster;
         }
 
-        T InitializeSpecialAmplification<T>(T amplification) where T : SpecialAmplification
+        T InitializeSpecialAmplification<T>(T defaultAmplification) where T : SpecialAmplification
         {
             T savedAmplification = null;
 
-            if (GameDataManager.data.products.ContainsKey(amplification.name))
+            if (GameDataManager.data.products.ContainsKey(defaultAmplification.name))
             {
-                savedAmplification = GameDataManager.data.products[amplification.name] as T;
+                savedAmplification = GameDataManager.data.products[defaultAmplification.name] as T;
             }
             else
             {
-                savedAmplification = amplification;
-                savedAmplification.currentPrice = amplification.priceDefault;
+                savedAmplification = defaultAmplification;
+                savedAmplification.currentPrice = defaultAmplification.priceDefault;
             }
 
-            if (amplification.priceDefault != savedAmplification.priceDefault)
+            if (defaultAmplification.priceDefault != savedAmplification.priceDefault)
             {
-                int price = 0;
+                int priceDefault = defaultAmplification.priceDefault;
+                int price = defaultAmplification.priceDefault;
                 int level = 0;
 
                 for (int i = 0; i < savedAmplification.level; i++)
                 {
                     level++;
-                    price += amplification.priceDefault * (level / 10);
+                    if (savedAmplification is PermanentSoldierBoost) price += priceDefault + (int)(priceDefault * (float)level / 10);
+                    else price += priceDefault * (level / 10);
                 }
 
-                savedAmplification.currentPrice = price;
-                savedAmplification.priceDefault = amplification.priceDefault;
+                MyDebug.LogWarning($"{defaultAmplification.name}'s default price has changed: {savedAmplification.priceDefault} -> {defaultAmplification.priceDefault}");
 
-                MyDebug.LogWarning($"{amplification.name}'s price has changed: {savedAmplification.currentPrice} -> {amplification.currentPrice}");
+                savedAmplification.currentPrice = price;
+                savedAmplification.priceDefault = priceDefault;
             }
-            if (amplification.currency != savedAmplification.currency) savedAmplification.currency = amplification.currency;
-            if (amplification.defaultModifierValue != savedAmplification.defaultModifierValue)
+            if (defaultAmplification.currency != savedAmplification.currency) savedAmplification.currency = defaultAmplification.currency;
+            if (defaultAmplification.defaultModifierValue != savedAmplification.defaultModifierValue)
             {
                 float modifierValue = 0;
 
                 for (int i = 0; i < savedAmplification.level; i++)
                 {
-                    modifierValue += amplification.defaultModifierValue;
+                    modifierValue += defaultAmplification.defaultModifierValue;
                 }
 
-                MyDebug.LogWarning($"{amplification.name}'s amplification power has changed: {savedAmplification.defaultModifierValue} -> {amplification.defaultModifierValue}. " +
+                MyDebug.LogWarning($"{defaultAmplification.name}'s amplification power has changed: {savedAmplification.defaultModifierValue} -> {defaultAmplification.defaultModifierValue}. " +
                     $"All power: {savedAmplification.modifierValue} -> {modifierValue}");
 
-                savedAmplification.defaultModifierValue = amplification.defaultModifierValue;
+                savedAmplification.defaultModifierValue = defaultAmplification.defaultModifierValue;
                 savedAmplification.modifierValue = modifierValue;
             }
+            if (savedAmplification.modifierValue == 0) savedAmplification.modifierValue = savedAmplification.defaultModifierValue;
 
             return savedAmplification;
+        }
+
+        T InitializeOffer<T>(T defaultOffer) where T : Offer
+        {
+            T savedOffer = null;
+
+            if (GameDataManager.data.products.ContainsKey(defaultOffer.name))
+            {
+                savedOffer = GameDataManager.data.products[defaultOffer.name] as T;
+            }
+            else
+            {
+                savedOffer = defaultOffer;
+            }
+
+            if (defaultOffer.priceDefault != savedOffer.priceDefault) savedOffer.priceDefault = defaultOffer.priceDefault;
+            if (defaultOffer.currency != savedOffer.currency) savedOffer.currency = defaultOffer.currency;
+            if (defaultOffer.productAmount != savedOffer.productAmount) savedOffer.productAmount = defaultOffer.productAmount;
+
+            return savedOffer;
         }
 
         T InitializeClickerInfo<T>(T clickerItem) where T : ClickerItem<Clicker>
@@ -362,7 +408,7 @@ public class UI : MonoBehaviour
             return clickerItem;
         }
 
-        /*void InitializeBoosterInfo<T>(T boosterItem, Dictionary<string, T> boosterItems, Transform uiObject) where T : BoosterItem<Booster>
+        T InitializeBoosterInfo<T>(T boosterItem) where T : BoosterItem<Booster>
         {
             var booster = boosterItem.Product;
 
@@ -372,7 +418,7 @@ public class UI : MonoBehaviour
                 ability = booster is DefenceBooster ? $"{booster.abilityModifier * 100}%" : $"{booster.abilityModifier * 60}/{LanguageManager.GetLocalizedText("S")}";
             }
 
-            boosterItem.uiInfo.uiObject = uiObject;
+            boosterItem.uiInfo.uiObject = CreateUIObject(productsPrefab[1], 1);
 
             InitializeShopInfo(boosterItem.uiInfo);
 
@@ -385,60 +431,88 @@ public class UI : MonoBehaviour
                 boosterItem.uiInfo.boosterIcon.text = boosterItem.uiInfo.boosterIcon.iconObject.transform.GetChild(2).GetComponent<Text>();
                 boosterItem.uiInfo.boosterIcon.iconObject.transform.GetChild(0).GetComponent<Image>().sprite = boosterItem.uiInfo.boosterIcon.picture;
             }
-
-            boosterItems.Add(booster.name, boosterItem);
-
+            
             ProductItem<Product> productItem = new ProductItem<Product>(boosterItem.uiInfo, boosterItem.Product);
 
             InitializeProductInfo(productItem);
 
-            boosterItems[booster.name].uiInfo.amount.text = $"{booster.amount}x";
-            boosterItems[booster.name].uiInfo.functional.text = $"{LanguageManager.GetLocalizedText(booster.GetType().ToString())} {ability} - {booster.useTime}{LanguageManager.GetLocalizedText("Sec")}";
-            boosterItems[booster.name].uiInfo.use.text = LanguageManager.GetLocalizedText("Use");
-            boosterItems[booster.name].uiInfo.bttnUse.onClick.AddListener(() => SFX(SoundTypes.Button));
-            boosterItems[booster.name].uiInfo.bttnUse.onClick.AddListener(() => Use(boosterItems[booster.name].uiInfo.name));
-            boosterItems[booster.name].uiInfo.price.text = FormatMoney(booster.priceDefault);
-            if (booster is IDefendBooster defendBooster) defendBooster.CheckAvailabilityUse();
+            boosterItem.uiInfo = productItem.uiInfo as BoosterShopItem;
+            boosterItem.Product = productItem.Product as Booster;
+
+            boosterItem.uiInfo.amount.text = $"{booster.amount}x";
+            boosterItem.uiInfo.functional.text = $"{LanguageManager.GetLocalizedText(booster.GetType().ToString())} {ability} - {booster.useTime}{LanguageManager.GetLocalizedText("Sec")}";
+            boosterItem.uiInfo.use.text = LanguageManager.GetLocalizedText("Use");
+            boosterItem.uiInfo.bttnUse.onClick.AddListener(() => SFX(SoundTypes.Button));
+            boosterItem.uiInfo.bttnUse.onClick.AddListener(() => Use(boosterItem.uiInfo.name));
+            boosterItem.uiInfo.bttnUse.interactable = !booster.IsUsing && booster.amount > 0;
+            boosterItem.uiInfo.price.text = FormatMoney(booster.priceDefault);
+
+            return boosterItem;
         }
 
-        void InitializeSpecialAmplificationInfo<T>(T specItem, Dictionary<string, T> specItems, Transform uiObject) where T : SpecialAmplificationItem<SpecialAmplification>
+        T InitializeSpecialAmplificationInfo<T>(T specItem) where T : SpecialAmplificationItem<SpecialAmplification>
         {
             var specAmplif = specItem.Product;
 
-            specItem.uiInfo.uiObject = uiObject;
+            specItem.uiInfo.uiObject = CreateUIObject(productsPrefab[2], 2);
 
             InitializeShopInfo(specItem.uiInfo);
 
             specItem.uiInfo.level = specItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
             specItem.uiInfo.modifierValue = specItem.uiInfo.uiObject.GetChild(5).GetComponent<Text>();
-
-            specItems.Add(specAmplif.name, specItem);
-
+            
             ProductItem<Product> productItem = new ProductItem<Product>(specItem.uiInfo, specItem.Product);
+
+            specItem.uiInfo = productItem.uiInfo as SpecialAmplificationShopItem;
+            specItem.Product = productItem.Product as SpecialAmplification;
 
             InitializeProductInfo(productItem);
 
-            //specItems[specAmplif.name].uiInfo.name.name = specAmplif.name;
+            specItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {specAmplif.level}";
+            specItem.uiInfo.price.text = FormatMoney(specAmplif.currentPrice);
+            specItem.uiInfo.modifierValue.text = $"+{specAmplif.defaultModifierValue * 100}%";
 
-            //specItems[specAmplif.name].uiInfo.avatarImage.sprite = specItem.uiInfo.avatar;
-            //specItems[specAmplif.name].uiInfo.name.text = LanguageManager.GetLocalizedText(specItem.uiInfo.name.name);
-            specItems[specAmplif.name].uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {specAmplif.level}";
-            specItems[specAmplif.name].uiInfo.price.text = FormatMoney(specAmplif.currentPrice);
-            //specItems[specAmplif.name].uiInfo.currency.sprite = Resources.Load<Sprite>(specItems[specAmplif.name].SpecAmplification.currency.ToString());
-            specItems[specAmplif.name].uiInfo.modifierValue.text = $"+{specAmplif.defaultModifierValue * 100}%";
+            if (specItem.Product is PermanentSoldierBoost) specItem.uiInfo.modifierValue.text = $"{specAmplif.modifierValue}x";
+
+            return specItem;
         }
-        */
+
+        T InitializeOfferInfo<T>(T offerItem) where T : OfferItem<Offer>
+        {
+            var offer = offerItem.Product;
+            
+            offerItem.uiInfo.uiObject = CreateUIObject(productsPrefab[3], 3);
+
+            InitializeShopInfo(offerItem.uiInfo);
+
+            offerItem.uiInfo.productAmount = offerItem.uiInfo.uiObject.GetChild(3).GetComponent<Text>();
+            offerItem.uiInfo.productImage = offerItem.uiInfo.uiObject.GetChild(5).GetComponent<Image>();
+
+            ProductItem<Product> productItem = new ProductItem<Product>(offerItem.uiInfo, offerItem.Product);
+
+            InitializeProductInfo(productItem);
+
+            offerItem.uiInfo = productItem.uiInfo as OfferShopItem;
+            offerItem.Product = productItem.Product as Offer;
+            
+            offerItem.uiInfo.price.text = $"{FormatMoney(offer.priceDefault)} {LanguageManager.GetLocalizedText(offerItem.Product.currency.ToString())}";
+            offerItem.uiInfo.productImage.sprite = offerItem.uiInfo.productIcon;
+            offerItem.uiInfo.productAmount.text = $"+{offerItem.Product.productAmount}";
+
+            return offerItem;
+        }
+
         void InitializeShopInfo(ShopItem shopItem)
         {
             shopItem.avatarImage = shopItem.uiObject.GetChild(0).GetChild(0).GetComponent<Image>();
             shopItem.bttnBuy = shopItem.uiObject.GetChild(1).GetComponent<Button>();
             shopItem.name = shopItem.uiObject.GetChild(2).GetComponent<Text>();
             shopItem.price = shopItem.uiObject.GetChild(4).GetComponent<Text>();
-            shopItem.currency = shopItem.uiObject.GetChild(6).GetComponent<Image>();
-
-            shopItem.bttnBuy.onClick.AddListener(() => SFX(SoundTypes.Buy));
+            shopItem.currency = shopItem.uiObject.GetChild(shopItem.uiObject.childCount - 1).GetComponent<Image>();
+            
             shopItem.bttnBuy.onClick.AddListener(() => BuyProduct(shopItem.name));
-
+            
+            shopItem.avatarImage.GetComponent<Button>().onClick.AddListener(() => SFX(SoundTypes.Button));
             shopItem.avatarImage.GetComponent<Button>().onClick.AddListener(() => ShowDescription(shopItem.name));
         }
 
@@ -484,25 +558,65 @@ public class UI : MonoBehaviour
 
             return uiObject.transform;
         }
+
+        MedalInfo CreateMedalInfo(GameObject prefab, Transform parent, int lvl)
+        {
+            GameObject prebab = Instantiate(prefab) as GameObject;
+
+            prebab.transform.SetParent(parent);
+            prebab.transform.localScale = new Vector3(1, 1, 1);
+
+            MedalInfo medalInfo = new MedalInfo(prebab.transform.GetChild(0).GetComponent<Image>(), prebab.transform.GetChild(1).GetComponent<Text>(), prebab.transform.GetChild(0).GetComponent<Button>());
+
+            medalInfo.medalButton.onClick.AddListener(() => SFX(SoundTypes.Button));
+            medalInfo.medalButton.onClick.AddListener(() => SelectMedal(lvl));
+
+            medalInfo.medalImage.sprite = prestigeAvatars[lvl];
+
+            medalNames.Add(medalInfo.medalLvl);
+
+            medalInfo.medalLvl.text = $"{LanguageManager.GetLocalizedText("Lvl")} {lvl}";
+
+            return medalInfo;
+        }
     }
 
     //
     int clickCount = 0;
     int maxClickCount = (int)(1 / 0.02f) / 2;
 
+    bool b = false;
     async void Check()
     {
         while (Application.isPlaying)
         {
             await System.Threading.Tasks.Task.Delay(1000);
-            
-            if (clickCount > maxClickCount) MyDebug.LogWarning("Pressing too often");
+
+            if (clickCount > maxClickCount)
+            {
+                MyDebug.LogWarning("Pressing too often");
+                b = true;
+            }
+            else b = false;
 
             clickCount = 0;
         }
     }
     //
 
+    public static List<T> GetProducts<T>() where T : Product
+    {
+        List<T> productsT = new List<T>();
+
+        foreach (var p in products)
+        {
+            if (p.Value.Product is T) productsT.Add(p.Value.Product as T);
+        }
+
+        if (productsT.Count == 0) return null;
+
+        return productsT;
+    }
     public static T GetProduct<T>(string name) where T : Product
     {
         if (products.ContainsKey(name))
@@ -536,23 +650,30 @@ public class UI : MonoBehaviour
 
     public static ProductItem<T> GetProductItem<T>(string name) where T : Product
     {
-        if (products.ContainsKey(name)) return products[name] as ProductItem<T>;
+        if (products.ContainsKey(name))
+        {
+            T t = products[name].Product as T;
+
+            ProductItem<T> product = new ProductItem<T>(products[name].uiInfo, t);
+
+            return product;
+        }
         return null;
     }
-    public static bool TryGetProductItem<T>(string name, out T productItem) where T : ProductItem<Product>
+    public static bool TryGetProductItem<T>(string name, out ProductItem<T> productItem) where T : Product
     {
         productItem = null;
 
         if (products.ContainsKey(name))
         {
-            if (products[name] is T productItemT)
-            {
-                productItem = productItemT;
-                return true;
-            }
+            T t = products[name].Product as T;
+
+            ProductItem<T> productItemT = new ProductItem<T>(products[name].uiInfo, t);
+
+            productItem = productItemT;
         }
 
-        return false;
+        return productItem != null && productItem.Product != null && productItem.uiInfo != null;
     }
     public static bool HasProductItem<T>(string name) where T : ProductItem<Product>
     {
@@ -581,6 +702,8 @@ public class UI : MonoBehaviour
     public void Click()
     {
         clickCount++;
+        if (b) return;
+
         EventManager.eventManager.Click(GameDataManager.data.clickBonus);
         IncreaseSpeed();
     }
@@ -589,9 +712,9 @@ public class UI : MonoBehaviour
     {
         notify.gameObject.SetActive(enable);
 
-        while (notify.gameObject.activeSelf)
+        while (notify.gameObject.activeSelf && Application.isPlaying)
         {
-            Color color = Color.HSVToRGB(40f / 360f, 1, (float)Math.Abs(Math.Sin(Time.time)));
+            Color color = new Color(1, 0.65f, 0, (float)Math.Abs(Math.Sin(Time.time)));
 
             notify.color = color;
 
@@ -609,6 +732,24 @@ public class UI : MonoBehaviour
             obj.gameObject.SetActive(true);
             MoveToTarget(name.name);
         }
+    }
+
+    public void ShowOrHideMedalsList()
+    {
+        string name = "Medals";
+        if (!panels[name].activeSelf)
+        {
+            panels[name].SetActive(true);
+            MoveToTarget(name);
+        }
+        else MoveToStartPos(name, default, OnClose);
+    }
+    public void SelectMedal(int avatarIndex)
+    {
+        prestigeImage.sprite = prestigeAvatars[avatarIndex];
+        GameDataManager.data.prestigeAvatarIndex = avatarIndex;
+
+        ShowOrHideMedalsList();
     }
 
     private float timeScale;
@@ -679,14 +820,13 @@ public class UI : MonoBehaviour
                 money /= 1000;
                 i++;
             }
-            if (i > 0 && Math.Truncate(money) != money)
-            {
-                return $"{money.ToString("F2")}{names[i]}";
-            }
+
+            if (i > 0 && Math.Truncate(money) != money) return $"{money.ToString("F2")}{names[i]}";
+
             return $"{(int)money}{names[i]}";
         }
 
-        string SplitUp() => $"{money:# ### ### ###}";
+        string SplitUp() => money > 0 ? $"{money:# ### ### ###}" : "0";
     }
 
     private GameObject closingPanel;
@@ -775,9 +915,11 @@ public class UI : MonoBehaviour
 
         float speedBoost = speedAcceleration * (clickKoef - deltaClickTime);
 
+        if (speed < 0) speedBoost *= (sliderModifier.maxValue / sliderModifier.value);
+
         if (speedBoost < speedLimit && speed < speedLimit) speed += speedBoost;
         else speed = speedLimit;
-
+        
         deltaClickTime = 0;
 
         ChangeValue();
@@ -798,8 +940,8 @@ public class UI : MonoBehaviour
 
             if (timer <= 0)
             {
-                if (speed > -speedLimit * sliderModifier.value) speed -= speedLimit / 10 * sliderModifier.value;
-                else speed = -speedLimit * sliderModifier.value;
+                if (speed > -speedLimit * (sliderModifier.value / 2)) speed -= speedLimit / 10 * (sliderModifier.value / 2);
+                else speed = -speedLimit * (sliderModifier.value / 2);
             }
 
             sliderModifier.value += speed;
@@ -855,9 +997,9 @@ public class UI : MonoBehaviour
             if (success)
             {
                 ClickerItem<Clicker> clickerItem;
-                if (TryGetProductItem(name, out ProductItem<Product> productItem))
+                if (TryGetProductItem(name, out ProductItem<Clicker> productItem))
                 {
-                    clickerItem = new ClickerItem<Clicker>(productItem.uiInfo as ClickerShopItem, productItem.Product as Clicker);
+                    clickerItem = new ClickerItem<Clicker>(productItem.uiInfo as ClickerShopItem, productItem.Product);
                 }
                 else return;
 
@@ -900,26 +1042,28 @@ public class UI : MonoBehaviour
     {
         if (soldiers == null) return;
 
-        soldiers.text = FormatMoney(GameDataManager.data.soldiersCount);
-        soldiersFull.text = FormatMoney(GameDataManager.data.soldiersCount, FormatType.SplitUp);
+        GameData data = GameDataManager.data;
 
-        aliensHearts.text = FormatMoney(GameDataManager.data.aliensHearts);
-        aliensHeartsFull.text = FormatMoney(GameDataManager.data.aliensHearts, FormatType.SplitUp);
+        soldiers.text = FormatMoney(data.soldiersCount);
+        soldiersFull.text = FormatMoney(data.soldiersCount, FormatType.SplitUp);
 
-        textClickBonus.text = $"+{FormatMoney(GameDataManager.data.clickBonus)}/{LanguageManager.GetLocalizedText("Click")}";
+        aliensHearts.text = FormatMoney(data.aliensHearts);
+        aliensHeartsFull.text = FormatMoney(data.aliensHearts, FormatType.SplitUp);
 
-        textAutoclickerBonus.text = $"+{FormatMoney(GameDataManager.data.autoClickerBonus)}/{LanguageManager.GetLocalizedText("Sec")}";
+        textClickBonus.text = $"+{FormatMoney(data.clickBonus * data.permanentSoldierModifier * SoldierBooster.SoldierModifier)}/{LanguageManager.GetLocalizedText("Click")}";
 
-        textOfflineClickerBonus.text = $"+{FormatMoney(GameDataManager.data.offlineClickBonus)}/{LanguageManager.GetLocalizedText("Sec")}";
+        textAutoclickerBonus.text = $"+{FormatMoney(data.autoClickerBonus * data.permanentSoldierModifier * SoldierBooster.SoldierModifier)}/{LanguageManager.GetLocalizedText("Sec")}";
 
-        if (prestigeAutoclickerBonus.gameObject.activeSelf) prestigeAutoclickerBonus.text = $"+{FormatMoney((int)(GameDataManager.data.autoClickerBonus * (GameDataManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
+        textOfflineClickerBonus.text = $"+{FormatMoney(data.offlineClickBonus * data.permanentSoldierModifier)}/{LanguageManager.GetLocalizedText("Sec")}";
 
-        if (prestigeOfflineClickerBonus.gameObject.activeSelf) prestigeOfflineClickerBonus.text = $"+{FormatMoney((int)(GameDataManager.data.offlineClickBonus * (GameDataManager.data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
+        if (prestigeAutoclickerBonus.gameObject.activeSelf) prestigeAutoclickerBonus.text = $"+{FormatMoney((int)(data.autoClickerBonus * (data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
 
-        if (GameDataManager.data.wasAttack && GameDataManager.data.hasLost && GameDataManager.data.soldiersCount >= 1000000)
+        if (prestigeOfflineClickerBonus.gameObject.activeSelf) prestigeOfflineClickerBonus.text = $"+{FormatMoney((int)(data.offlineClickBonus * (data.prestigeLvl * 0.1f)))}/{LanguageManager.GetLocalizedText("Sec")}";
+
+        if (data.wasAttack && data.hasLost && data.soldiersCount >= 1000000)
         {
             panels["Prestige"].transform.GetChild(2).GetComponent<Button>().interactable = true;
-            GameDataManager.data.hasLost = false;
+            data.hasLost = false;
             OpenPrestigePanel();
         }
 
@@ -934,50 +1078,72 @@ public class UI : MonoBehaviour
             else CheckPossibilityToBuy(p.Value.Product);
         }
 
+        heartsSkip.interactable = data.aliensHearts >= data.SkipCost;
+
         void CheckPossibilityToBuy(Product product)
         {
             if (product is Clicker)
             {
-                if (!(GetProductItem<Clicker>(product.name) is ClickerItem<Clicker> clickerItem)) return;
+                ClickerItem<Clicker> clickerItem;
+                if (TryGetProductItem(product.name, out ProductItem<Clicker> productItem))
+                {
+                    clickerItem = new ClickerItem<Clicker>(productItem.uiInfo as ClickerShopItem, productItem.Product);
+                }
+                else return;
 
                 if (clickerItem.Product.currency == Currency.Soldier)
                 {
-                    if (GameDataManager.data.soldiersCount < clickerItem.Product.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
+                    if (data.soldiersCount < clickerItem.Product.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
                     else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
                 }
                 else
                 {
-                    if (GameDataManager.data.aliensHearts < clickerItem.Product.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
+                    if (data.aliensHearts < clickerItem.Product.currentPrice) clickerItem.uiInfo.bttnBuy.interactable = false;
                     else if (!clickerItem.uiInfo.bttnBuy.interactable) clickerItem.uiInfo.bttnBuy.interactable = true;
                 }
             }
             else if (product is Booster)
             {
-                if (!(GetProductItem<Booster>(product.name) is BoosterItem<Booster> boosterItem)) return;
+                BoosterItem<Booster> boosterItem;
+                if (TryGetProductItem(product.name, out ProductItem<Booster> productItem))
+                {
+                    boosterItem = new BoosterItem<Booster>(productItem.uiInfo as BoosterShopItem, productItem.Product);
+                }
+                else return;
 
                 if (boosterItem.Product.currency == Currency.Soldier)
                 {
-                    if (GameDataManager.data.soldiersCount < boosterItem.Product.priceDefault) boosterItem.uiInfo.bttnBuy.interactable = false;
+                    if (data.soldiersCount < boosterItem.Product.priceDefault) boosterItem.uiInfo.bttnBuy.interactable = false;
                     else if (!boosterItem.uiInfo.bttnBuy.interactable) boosterItem.uiInfo.bttnBuy.interactable = true;
                 }
                 else
                 {
-                    if (GameDataManager.data.aliensHearts < boosterItem.Product.priceDefault) boosterItem.uiInfo.bttnBuy.interactable = false;
+                    if (data.aliensHearts < boosterItem.Product.priceDefault) boosterItem.uiInfo.bttnBuy.interactable = false;
                     else if (!boosterItem.uiInfo.bttnBuy.interactable) boosterItem.uiInfo.bttnBuy.interactable = true;
                 }
             }
             else if (product is SpecialAmplification)
             {
-                if (!(GetProductItem<SpecialAmplification>(product.name) is SpecialAmplificationItem<SpecialAmplification> specItem)) return;
+                SpecialAmplificationItem<SpecialAmplification> specItem;
+                if (TryGetProductItem(product.name, out ProductItem<SpecialAmplification> productItem))
+                {
+                    specItem = new SpecialAmplificationItem<SpecialAmplification>(productItem.uiInfo as SpecialAmplificationShopItem, productItem.Product);
+                }
+                else return;
 
-                if (GameDataManager.data.aliensHearts < specItem.Product.currentPrice) specItem.uiInfo.bttnBuy.interactable = false;
+                if (data.aliensHearts < specItem.Product.currentPrice) specItem.uiInfo.bttnBuy.interactable = false;
                 else if (!specItem.uiInfo.bttnBuy.interactable) specItem.uiInfo.bttnBuy.interactable = true;
             }
         }
 
         void CheckPossibillityToUse(Booster booster)
         {
-            if (!(GetProductItem<Booster>(booster.name) is BoosterItem<Booster> boosterItem)) return;
+            BoosterItem<Booster> boosterItem;
+            if (TryGetProductItem(booster.name, out ProductItem<Booster> productItem))
+            {
+                boosterItem = new BoosterItem<Booster>(productItem.uiInfo as BoosterShopItem, productItem.Product);
+            }
+            else return;
 
             BoosterShopItem shopItem = boosterItem.uiInfo;
 
@@ -1044,9 +1210,13 @@ public class UI : MonoBehaviour
             MyDebug.LogError($"Booster not found (null)");
             return;
         }
-        
-        if (!(GetProductItem<Booster>(booster.name) is BoosterItem<Booster> boosterItem)) return;
 
+        BoosterItem<Booster> boosterItem;
+        if (TryGetProductItem(booster.name, out ProductItem<Booster> productItem))
+        {
+            boosterItem = new BoosterItem<Booster>(productItem.uiInfo as BoosterShopItem, productItem.Product);
+        }
+        else return;
 
         boosterItem.uiInfo.bttnUse.interactable = hasEnded && boosterItem.Product.amount > 0;
         
@@ -1066,6 +1236,9 @@ public class UI : MonoBehaviour
 
             Notify(!panels["More"].activeSelf);
         }
+
+        heartsSkip.interactable = GameDataManager.data.aliensHearts >= GameDataManager.data.SkipCost;
+        heartsSkip.transform.GetChild(0).GetComponent<Text>().text = GameDataManager.data.SkipCost.ToString();
     }
 
     private void OnFinishBuy(Product product, bool success)
@@ -1081,9 +1254,9 @@ public class UI : MonoBehaviour
                 if (product is Clicker clicker)
                 {
                     ClickerItem<Clicker> clickerItem;
-                    if (TryGetProductItem(product.name, out ProductItem<Product> productItem))
+                    if (TryGetProductItem(product.name, out ProductItem<Clicker> productItem))
                     {
-                        clickerItem = new ClickerItem<Clicker>(productItem.uiInfo as ClickerShopItem, productItem.Product as Clicker);
+                        clickerItem = new ClickerItem<Clicker>(productItem.uiInfo as ClickerShopItem, productItem.Product);
                     }
                     else return;
 
@@ -1105,9 +1278,9 @@ public class UI : MonoBehaviour
                 else if (product is Booster booster)
                 {
                     BoosterItem<Booster> boosterItem;
-                    if (TryGetProductItem(product.name, out ProductItem<Product> productItem))
+                    if (TryGetProductItem(product.name, out ProductItem<Booster> productItem))
                     {
-                        boosterItem = new BoosterItem<Booster>(productItem.uiInfo as BoosterShopItem, productItem.Product as Booster);
+                        boosterItem = new BoosterItem<Booster>(productItem.uiInfo as BoosterShopItem, productItem.Product);
                     }
                     else return;
 
@@ -1117,13 +1290,15 @@ public class UI : MonoBehaviour
                 else if (product is SpecialAmplification spec)
                 {
                     SpecialAmplificationItem<SpecialAmplification> specItem;
-                    if (TryGetProductItem(product.name, out ProductItem<Product> productItem))
+                    if (TryGetProductItem(product.name, out ProductItem<SpecialAmplification> productItem))
                     {
-                        specItem = new SpecialAmplificationItem<SpecialAmplification>(productItem.uiInfo as SpecialAmplificationShopItem, productItem.Product as SpecialAmplification);
+                        specItem = new SpecialAmplificationItem<SpecialAmplification>(productItem.uiInfo as SpecialAmplificationShopItem, productItem.Product);
                     }
                     else return;
+
                     specItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {spec.level}";
                     specItem.uiInfo.price.text = FormatMoney(spec.currentPrice);
+                    specItem.uiInfo.modifierValue.text = $"{specItem.Product.modifierValue}x"; ;
                 }
                 else MyDebug.LogWarning($"Product not found");
             }
@@ -1152,6 +1327,26 @@ public class UI : MonoBehaviour
 
         ShowReward();
     }
+
+    private void OnAdFinished(RewardBonus rewardBonus)
+    {
+        switch (rewardBonus.bonus)
+        {
+            case RewardBonus.Bonus.SkipTimer:
+                int skipSeconds = rewardBonus.amount * 60;
+                GameDataManager.data.giftTimer.DecreaseTime(skipSeconds);
+                break;
+            case RewardBonus.Bonus.HeartsBonus:
+                GameDataManager.data.aliensHearts += rewardBonus.amount;
+                break;
+            default:
+                MyDebug.LogWarning("Reward bonus not found");
+                break;
+        }
+
+        OnChangeText();
+    }
+
     #endregion /OnEvent
 
     #region Shop
@@ -1161,8 +1356,9 @@ public class UI : MonoBehaviour
         RectTransform description = null;
 
         if (HasProduct<Clicker>(name.name)) description = descriptions[0];
-        if (HasProduct<Booster>(name.name)) description = descriptions[1];
-        if (HasProduct<SpecialAmplification>(name.name)) description = descriptions[2];
+        else if (HasProduct<Booster>(name.name)) description = descriptions[1];
+        else if (HasProduct<SpecialAmplification>(name.name)) description = descriptions[2];
+        else if (HasProduct<Offer>(name.name)) description = descriptions[3];
         else return;
 
         if (description.gameObject.activeSelf && description.position == name.transform.parent.GetChild(1).position)
@@ -1182,7 +1378,10 @@ public class UI : MonoBehaviour
         
         EventManager.eventManager.Buy(product, (bool success) =>
         {
-            if (success) SFXManager.PlaySound(SoundTypes.Buy);
+            if (success)
+            {
+                SFXManager.PlaySound(SoundTypes.Buy);
+            }
         });
     }
 
@@ -1282,9 +1481,35 @@ public class UI : MonoBehaviour
         });
     }
 
-    public void SkipTimer()
+    public void SkipMenu(Image skipMenuImage)
     {
-        GameDataManager.data.giftTimer.Reset(0, 1);
+        bool active = panels["SkipMenu"].activeSelf;
+
+        panels["SkipMenu"].SetActive(!active);
+
+        skipMenuImage.color = !active ? Color.green : Color.white;
+    }
+
+    public void AdSkip(Image skipMenuImage)
+    {
+        SkipMenu(skipMenuImage);
+    }
+    public void HeartsSkip(Image skipMenuImage)
+    {
+        GameData data = GameDataManager.data;
+        if (data.aliensHearts < data.SkipCost)
+        {
+            MyDebug.LogError("Not enough hearts");
+            return;
+        }
+
+        data.aliensHearts -= data.SkipCost;
+
+        data.giftTimer.DecreaseTime(-1);
+
+        OnChangeText();
+
+        SkipMenu(skipMenuImage);
     }
 
     #endregion /Gift
@@ -1359,6 +1584,26 @@ public class UI : MonoBehaviour
         }
     }
 
+    public void Notifications(bool isStart = false)
+    {
+        bool enableNotify = GameDataManager.data.enableNotificaions;
+
+        if (!isStart) enableNotify = !enableNotify;
+
+        if (enableNotify)
+        {
+            buttonNotify.color = new Color(0, 0.75f, 0);
+            toggleNotify.rectTransform.anchoredPosition = new Vector2(150, 0);
+        }
+        else
+        {
+            buttonNotify.color = new Color(0.75f, 0, 0);
+            toggleNotify.rectTransform.anchoredPosition = new Vector2(0, 0);
+        }
+
+        GameDataManager.data.enableNotificaions = enableNotify;
+    }
+
     public void FPS(int fps)
     {
         Application.targetFrameRate = fps;
@@ -1431,9 +1676,26 @@ public class UI : MonoBehaviour
         {
             foreach (var p in products)
             {
-                if (GetProductItem<Clicker>(p.Key) is ClickerItem<Clicker> clickerItem) ChangeClickerItemInfo(clickerItem);
-                if (GetProductItem<Booster>(p.Key) is BoosterItem<Booster> boosterItem) ChangeBoosterItemInfo(boosterItem);
-                if (GetProductItem<SpecialAmplification>(p.Key) is SpecialAmplificationItem<SpecialAmplification> specItem) ChangeSpecAmplificationItemInfo(specItem);
+                if (TryGetProductItem(p.Key, out ProductItem<Clicker> productItemC))
+                {
+                    ClickerItem<Clicker> clickerItem = new ClickerItem<Clicker>(productItemC.uiInfo as ClickerShopItem, productItemC.Product);
+                    ChangeClickerItemInfo(clickerItem);
+                }
+                else if (TryGetProductItem(p.Key, out ProductItem<Booster> productItemB))
+                {
+                    BoosterItem<Booster> boosterItem = new BoosterItem<Booster>(productItemB.uiInfo as BoosterShopItem, productItemB.Product);
+                    ChangeBoosterItemInfo(boosterItem);
+                }
+                else if (TryGetProductItem(p.Key, out ProductItem<SpecialAmplification> productItemS))
+                {
+                    SpecialAmplificationItem<SpecialAmplification> specItem = new SpecialAmplificationItem<SpecialAmplification>(productItemS.uiInfo as SpecialAmplificationShopItem, productItemS.Product);
+                    ChangeSpecAmplificationItemInfo(specItem);
+                }
+                else if (TryGetProductItem(p.Key, out ProductItem<Offer> productItemO))
+                {
+                    OfferItem<Offer> offerItem = new OfferItem<Offer>(productItemO.uiInfo as OfferShopItem, productItemO.Product);
+                    ChangeOfferItemInfo(offerItem);
+                }
             }
 
             void ChangeClickerItemInfo(ClickerItem<Clicker> clickerItem)
@@ -1477,12 +1739,25 @@ public class UI : MonoBehaviour
                 specItem.uiInfo.name.text = LanguageManager.GetLocalizedText(specItem.uiInfo.name.name);
                 specItem.uiInfo.level.text = $"{LanguageManager.GetLocalizedText("Level")} {specAmplif.level}";
             }
+
+            void ChangeOfferItemInfo(OfferItem<Offer> offerItem)
+            {
+                Offer offer = offerItem.Product;
+
+                offerItem.uiInfo.name.text = LanguageManager.GetLocalizedText(offerItem.uiInfo.name.name);
+                offerItem.uiInfo.price.text = $"{offer.productAmount} {LanguageManager.GetLocalizedText(offer.currency.ToString())}";
+            }
         }
         void ChangeTexts()
         {
             foreach (var t in localizedTexts) if (t != null) t.text = LanguageManager.GetLocalizedText(t.name);
 
             calendar.month.text = LanguageManager.GetLocalizedText(calendar.months.Peek());
+
+            for (int i = 0; i < medalNames.Count; i++)
+            {
+                medalNames[i].text = $"{LanguageManager.GetLocalizedText("Lvl")} {i}";
+            }
         }
     }
 
@@ -1540,7 +1815,8 @@ public class UI : MonoBehaviour
         timeToWinLeft = 90 + (30 * prestige);
         if (enemySpawnStep >= 0.02f) enemySpawnStep *= 0.75f;
 
-        data.aliensHearts = aliensHearts + (prestige * 1000);
+        int heartsBonus = 1000;
+        data.aliensHearts = aliensHearts + heartsBonus + (prestige * heartsBonus / 10);
         data.soldiersCount = 1000000 * prestige + 51;
         data.prestigeLvl = prestige;
         data.timeToWinLeft = timeToWinLeft;
@@ -1753,6 +2029,19 @@ public class UI : MonoBehaviour
         }
     }
 
+    public class MedalInfo
+    {
+        public MedalInfo(Image medalImage, Text medalLvl, Button medalButton)
+        {
+            this.medalImage = medalImage;
+            this.medalLvl = medalLvl;
+            this.medalButton = medalButton;
+        }
+
+        public Image medalImage;
+        public Text medalLvl;
+        public Button medalButton;
+    }
 
     private enum FormatType
     {

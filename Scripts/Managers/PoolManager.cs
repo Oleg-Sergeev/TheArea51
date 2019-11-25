@@ -30,21 +30,20 @@ public class PoolManager : MonoBehaviour
 
     public void Spawn(PoolType poolType)
     {
+        if (!pooledObjects.ContainsKey(poolType)) return;
+
         if (pooledObjects[poolType].Count == 0)
         {
             var pool = GetPool(poolType);
 
-            if (!pool.allowRuntimeCreating)
-            {
-                return;
-            }
+            if (!pool.allowRuntimeCreating) return;
 
             pooledObjects[poolType].Enqueue(CreatePoolObject(pool.prefab));
         }
         GameObject objToSpawn = pooledObjects[poolType].Dequeue();
 
         objToSpawn.SetActive(true);
-        //??
+
         objToSpawn.GetComponent<IPooledObj>().OnSpawn(poolType);
     }
 

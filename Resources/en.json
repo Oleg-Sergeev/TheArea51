@@ -284,6 +284,62 @@
             "key": "RescuePillD",
             "value": "The rescue pill forbidden in the Ramasian Fedoration is actively used in critical situations in Area 51. Its main advantage is that it treats many fighters and instantly"
         },
+        {
+            "key": "GreatDoublerOfSoldiers",
+            "value": "Great doubler of soldiers"
+        },
+        {
+            "key": "GreatDoublerOfSoldiersD",
+            "value": "Great doubler of soldiers"
+        },
+        {
+            "key": "HandfulOfHearts",
+            "value": "Handful of hearts"
+        },
+        {
+            "key": "HandfulOfHeartsD",
+            "value": "A small pile of hearts for prevention"
+        },
+        {
+            "key": "BagOfHearts",
+            "value": "Bag of hearts"
+        },
+        {
+            "key": "BagOfHeartsD",
+            "value": "This bag is enough for a couple of solid boosters"
+        },
+        {
+            "key": "BoxWithHearts",
+            "value": "Box with hearts"
+        },
+        {
+            "key": "BoxWithHeartsD",
+            "value": "The perfect buy for true area defenders"
+        },
+        {
+            "key": "ChestForHearts",
+            "value": "Chest for hearts"
+        },
+        {
+            "key": "ChestForHeartsD",
+            "value": "If this chest were empty, he would still find use"
+        },
+        {
+            "key": "CartOfHearts",
+            "value": "Cart of hearts"
+        },
+        {
+            "key": "CartOfHeartsD",
+            "value": "About purchase - a cart as a gift!"
+        },
+        {
+            "key": "WagonOfHearts",
+            "value": "Wagon of hearts"
+        },
+        {
+            "key": "WagonOfHeartsD",
+            "value": "If you buy this kit, you can easily buy this game :)"
+        },
 
 
         {
@@ -363,6 +419,10 @@
             "value": "Level"
         },
         {
+            "key": "Lvl",
+            "value": "Lvl"
+        },
+        {
             "key": "Buy",
             "value": "Buy"
         },
@@ -373,6 +433,10 @@
         {
             "key": "Off_",
             "value": "Off"
+        },
+        {
+            "key": "Rub",
+            "value": "rub"
         },
         {
             "key": "Upgrade",
@@ -435,8 +499,8 @@
             "value": "Inverse scale"
         },
         {
-            "key": "Open",
-            "value": "Open"
+            "key": "Notify",
+            "value": "Notification"
         },
         {
             "key": "Fps",
@@ -449,6 +513,10 @@
         {
             "key": "On",
             "value": "On"
+        },
+        {
+            "key": "Open",
+            "value": "Open"
         },
         {
             "key": "BeforeStorm",
@@ -490,7 +558,23 @@
             "key": "YourPresent",
             "value": "Your present:"
         },
+        {
+            "key": "AliensVideo",
+            "value": "Aliens' video"
+        },
+        {
+            "key": "ChooseTimerSkip",
+            "value": "Choose a timer skip method"
+        },
 
+        {
+            "key": "SectionFreeHearts",
+            "value": "Free hearts"
+        },
+        {
+            "key": "SectionGifts",
+            "value": "Gifts"
+        },
         {
             "key": "SectionManualClickers",
             "value": "Manual clickers"
@@ -532,12 +616,17 @@
             "value": "Soldier scale upgrades"
         },
         {
-            "key": "Clickers",
-            "value": "Clickers"
+            "key": "SectionPermanentSoldierBoosts",
+            "value": "Permanent soldier boosts"
         },
         {
-            "key": "Warriors",
-            "value": "Warriors"
+            "key": "SectionAlienHeartss",
+            "value": "Alient hearts"
+        },
+
+        {
+            "key": "Clickers",
+            "value": "Clickers"
         },
         {
             "key": "Boosters",
@@ -546,6 +635,10 @@
         {
             "key": "Special",
             "value": "Special"
+        },
+        {
+            "key": "Offers",
+            "value": "Offers"
         },
 
         {
@@ -595,6 +688,10 @@
         {
             "key": "Dec",
             "value": "December"
+        },
+        {
+            "key": "TimeToOpenGift",
+            "value": "Time to open gift!"
         }
     ]
 }

@@ -1,0 +1,466 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="AnimationEvent" Collapsed="true">
+    <Position X="24" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\AnimationEvent.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ContentSizeControl" Collapsed="true">
+    <Position X="25.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Components\ContentSizeControl.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MovingObjList" Collapsed="true">
+    <Position X="29.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAACBAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Components\MovingObj.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MovingObj" Collapsed="true">
+    <Position X="27.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEEAIAAAAFAAAAAAAAAAAABAAAAAAAAEAACAEI=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Components\MovingObj.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PooledObject" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="24" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAYAAAAAAAAAAAAEABAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Components\PooledObject.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="EventManager" Collapsed="true">
+    <Position X="29.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAIQIAAQAQCSQAAABIAAEAACAFAAAQAAQAIBAAAkAgA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\EventManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GameDataManager" Collapsed="true">
+    <Position X="24" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAAAAAACAAAAAAAACABAABBAAAABQAAAAAEA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\GameDataManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LanguageManager" Collapsed="true">
+    <Position X="31" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAAAAAEAABAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\LanguageManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LocalizationData" Collapsed="true">
+    <Position X="24" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\LanguageManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LocalizationItem" Collapsed="true">
+    <Position X="25.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAEAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\LanguageManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PoolManager" Collapsed="true">
+    <Position X="25.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAABAMAEAAAAEAAQAgAAASAAAAABGAEA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\PoolManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SaveManager" Collapsed="true">
+    <Position X="29.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAhoAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\SaveManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SFXManager" Collapsed="true">
+    <Position X="31" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAAAAACAAAgAAAAAAAAAABAAAAAAAEA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\SFXManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ShopManager" Collapsed="true">
+    <Position X="24" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAIAAABAECAABhAAIAADAAAAARAAAAEAgEAAAAAAAFI=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Product" Collapsed="true">
+    <Position X="11.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAhAAAAIAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ShopItem" Collapsed="true">
+    <Position X="2.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAACAAAAAAAAAAAAIAAAEAAAFAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClickerShopItem" Collapsed="true">
+    <Position X="0.5" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BoosterShopItem" Collapsed="true">
+    <Position X="2.75" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAAAAgAAABQAAAAAAAAQ=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SpecialAmplificationShopItem" Collapsed="true">
+    <Position X="5" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAQAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ProductItem&lt;T&gt;" Collapsed="true">
+    <Position X="11.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClickerItem&lt;T&gt;" Collapsed="true">
+    <Position X="6.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAACAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ManualClickerItem" Collapsed="true">
+    <Position X="8" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AutoClickerItem" Collapsed="true">
+    <Position X="10.25" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OfflineClickerItem" Collapsed="true">
+    <Position X="3.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UniversalClickerItem" Collapsed="true">
+    <Position X="5.75" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clicker" Collapsed="true">
+    <Position X="4.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAgAEAAEAAAAAQAAAAAAAgAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ManualClicker" Collapsed="true">
+    <Position X="1.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AutoClicker" Collapsed="true">
+    <Position X="3.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="OfflineClicker" Collapsed="true">
+    <Position X="5.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="UniversalClicker" Collapsed="true">
+    <Position X="8" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQBAAAAAAAAAAAAAAAAAAAABAACAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="BoosterItem&lt;T&gt;" Collapsed="true">
+    <Position X="17" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAAAAAEAAAAACAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SoldierBoosterItem" Collapsed="true">
+    <Position X="21.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TimeBoosterItem" Collapsed="true">
+    <Position X="12.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RegenBoosterItem" Collapsed="true">
+    <Position X="14.75" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InstantHealthBoosterItem" Collapsed="true">
+    <Position X="17" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DefenceBoosterItem" Collapsed="true">
+    <Position X="19.25" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Booster" Collapsed="true">
+    <Position X="17" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAACAAAAAEAAAABAAAAAAAEgAAAAAAAAAAAABA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SoldierBooster" Collapsed="true">
+    <Position X="14.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAAgAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TimeBooster" Collapsed="true">
+    <Position X="17" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAAEAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RegenBooster" Collapsed="true">
+    <Position X="19.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAEAAAAAAAAEAAAAAAAAgAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="InstantHealthBooster" Collapsed="true">
+    <Position X="21.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAAAAAEAAAAAAAAgAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="DefenceBooster" Collapsed="true">
+    <Position X="12.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAAAAAEAAAAAAAAAAAAEAAAAAAAAgAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="SpecialAmplificationItem&lt;T&gt;" Collapsed="true">
+    <Position X="1.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PermanentSoldierBoostItem" Collapsed="true">
+    <Position X="1.25" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SpecialAmplification" Collapsed="true">
+    <Position X="10.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAQAAAAAAAAAAgAAAAEAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TimeSoldierModifier" Collapsed="true">
+    <Position X="10.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EnemySpawner" Collapsed="true">
+    <Position X="27.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAQAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\EnemySpawner.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GameData" Collapsed="true">
+    <Position X="31" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EgQEIAAQMQwASBgEAASkggAAQgQQAgAACDIEBAAAABA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\GameData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Gift" Collapsed="true">
+    <Position X="25.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAwAAAACAAAAAABAQACAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\Gift.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Reward" Collapsed="true">
+    <Position X="27.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAAAAAAAAAAAAAAAAEgAQAAAAAAAAAgAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\Gift.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GiftTimer" Collapsed="true">
+    <Position X="27.5" Y="1.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEACAABABEAgAAAAIAAAAAACAABAAgAAAAQAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\Gift.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InvalidSaveOperationException" Collapsed="true">
+    <Position X="29.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\InvalidSaveOperationException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MyDebug" Collapsed="true">
+    <Position X="31" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgEAABAAAAAAAQAAAAAAAAAAIAgAAAABAAAAAACAAEA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\MyDebug.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UI" Collapsed="true">
+    <Position X="25.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>Cxwb7T0g6CAjYhtfYcAgJCETIybGg8VN8y7O3Zt7rtw=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\UI.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UpdateManager" Collapsed="true">
+    <Position X="27.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAQAAAAAAAAEA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\UpdateManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="IPooledObj" Collapsed="true">
+    <Position X="31" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Components\PooledObject.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IAutocliker" Collapsed="true">
+    <Position X="24" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IOfflineClicker" Collapsed="true">
+    <Position X="29.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IDefendBooster" Collapsed="true">
+    <Position X="25.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IUpdateableObj" Collapsed="true">
+    <Position X="24" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\UpdateManager.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="IFixedUpdateableObj" Collapsed="true">
+    <Position X="27.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\UpdateManager.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="PoolType" Collapsed="true">
+    <Position X="25.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAggAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\PoolManager.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SoundTypes" Collapsed="true">
+    <Position X="29.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEIAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAgA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\SFXManager.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="RewardTypes" Collapsed="true">
+    <Position X="27.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAQAAAAAAEAAAAAgAAAAABAAAAAAAAIAAAAA=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Other\Gift.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="Currency" Collapsed="true">
+    <Position X="24" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>Assets\TheArea51\Scripts\Managers\ShopManager.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

@@ -70,7 +70,7 @@ public class MyDebug : MonoBehaviour
             texts[i].text = tempArr[j].text;
         }
 
-        DeleteMessage(2);
+        DeleteMessage(10);
     }
 
     private async static void DeleteMessage(int deleteTime)

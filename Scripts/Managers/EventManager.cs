@@ -6,8 +6,9 @@ public class EventManager
 
     public event Action<bool> OnEndAttack;
     public event Action<int> OnClick, OnHpChange;
+    public event Action<RewardBonus> OnAdFinished;
     public event Action<Action<Reward>> OnGenerateReward;
-    public event Action<Product, Action<bool>> OnBuy;
+    public event Action<Product, Action<bool>, bool> OnBuy;
     public event Action<Product, bool> OnFinishBuy;
     public event Action<Booster, bool> OnBoosterUsed;
     public event Action OnAnyAction, OnHpHasChanged;
@@ -39,9 +40,9 @@ public class EventManager
         OnBoosterUsed(booster, hasEnded);
     }
 
-    public void Buy<T>(T product, Action<bool> success = default) where T : Product
+    public void Buy<T>(T product, Action<bool> success = default, bool isFree = false) where T : Product
     {
-        OnBuy(product, success);
+        OnBuy(product, success, isFree);
         OnAnyAction();
     }
 
@@ -55,5 +56,7 @@ public class EventManager
     public void FinishBuy(Product product, bool success) => OnFinishBuy(product, success);
 
     public void EndAnimation(UnityEngine.GameObject obj) => OnAnimationEnd(obj);
+
+    public void FinishAd(RewardBonus rewardBonus) => OnAdFinished(rewardBonus);
 }
 

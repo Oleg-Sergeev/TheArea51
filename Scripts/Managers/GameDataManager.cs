@@ -6,6 +6,7 @@ using UnityEngine;
 public class GameDataManager : MonoBehaviour
 {
     public static GameData data;
+    public static Notification giftNotification;
 
     private async void Awake()
     {
@@ -24,7 +25,7 @@ public class GameDataManager : MonoBehaviour
 
         data.timerIncreasingValue = data.modifierValue;
 
-        CheckData(data);
+        CheckDate(data);
 
         StartCoroutine(Save());
 
@@ -38,6 +39,9 @@ public class GameDataManager : MonoBehaviour
             }
         }
 
+        giftNotification = new Notification();
+
+        giftNotification.CreateNotificationChannel("Gift", "OpenGift", "Open gift", Unity.Notifications.Android.Importance.Default);
 
         void CheckForNull(GameData data)
         {
@@ -45,16 +49,22 @@ public class GameDataManager : MonoBehaviour
             if (data.products == null) data.products = new Dictionary<string, Product>();
             if (data.timeToWinLeft == null) data.timeToWinLeft = 90f;
             if (data.enemySpawnStep == null) data.enemySpawnStep = 0.2f;
+            if (data.timerSkipKoef == null) data.timerSkipKoef = 2.5f;
+            if (data.permanentSoldierModifier == 0) data.permanentSoldierModifier = 1;
             if (data.dayStep == null) data.dayStep = 60f;
             if (data.giftTimer == default) data.giftTimer = new GiftTimer(60, 0);
         }
-        void CheckData(GameData data)
+        void CheckDate(GameData data)
         {
-            MyDebug.Log("Проверка времени...");
             if (DateTime.TryParse(data.exitTime, out DateTime exitTime))
             {
                 DateTime currentTime = DateTime.Now;
-                if (currentTime < exitTime) MyDebug.LogWarning("Перемотка времени detected");
+                if (currentTime < exitTime)
+                {
+                    MyDebug.LogWarning("Перемотка времени detected");
+                    data.soldiersCount /= 2;
+                    data.aliensHearts /= 2;
+                }
             }
         }
     }
@@ -103,7 +113,7 @@ public class GameDataManager : MonoBehaviour
         }
 
         int lastSoldierCount = data.soldiersCount;
-        data.soldiersCount += (int)(clickCount * SoldierBooster.SoldierModifier * Mathf.Floor(UI.Instance.sliderModifier.value));
+        data.soldiersCount += (int)(clickCount * SoldierBooster.SoldierModifier * data.permanentSoldierModifier * Mathf.Floor(UI.Instance.sliderModifier.value));
         if (data.soldiersCount <= 0 && lastSoldierCount < 0) data.soldiersCount = 0;
         else if (data.soldiersCount <= 0 && lastSoldierCount > 0) data.soldiersCount = int.MaxValue;
     }
@@ -120,10 +130,7 @@ public class GameDataManager : MonoBehaviour
 
     private void OnApplicationFocus(bool focus)
     {
-        if (!focus)
-        {
-            OfflineClicker.RememberTime();
-        }
+        if (!focus) data.exitTime = DateTime.Now.ToString();
         else
         {
             foreach (var p in data.products)
@@ -133,5 +140,28 @@ public class GameDataManager : MonoBehaviour
         }
 
         SaveManager.Save(data);
+    }
+    private void OnApplicationPause(bool pause)
+    {
+        GameData data = GameDataManager.data;
+
+        if (pause)
+        {
+            data.exitTime = DateTime.Now.ToString();
+
+            TimeSpan ts = new TimeSpan(0, data.giftTimer.Minute, data.giftTimer.Second);
+
+            if (ts.TotalSeconds > 60)
+                giftNotification.SendNotification(giftNotification.CreateAndroidNotification("The Area 51", LanguageManager.GetLocalizedText("TimeToOpenGift"), DateTime.Now.Add(ts)), giftNotification.AndroidChannel.Id);
+        }
+        else
+        {
+            if (DateTime.TryParse(data.exitTime, out DateTime time))
+            {
+                data.giftTimer.DecreaseTime((int)(DateTime.Now - DateTime.Parse(data.exitTime)).TotalSeconds);
+                
+                Notification.CancelAllNotifications();
+            }
+        }
     }
 }
